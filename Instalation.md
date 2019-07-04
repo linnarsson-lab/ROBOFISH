@@ -92,9 +92,8 @@ Next you need to find the communication ports with which the computer can commun
 The next cell in the Jupyter lab notebook will contain the functions to initiate the system. First make sure all paths in this cell are correct.
 - Make sure the path to the database is correct. In your ROBOFISH folder a new folder should have been made called `FISH_database` containing the database: `FISH_System2_db.sqlite`. Add the path to this file in the Jupyter lab (Windows: right click, properties, Location). 
 - For the first run you can ignore the `start_imaging_file_path` and the `imaging_output folder`. Below are the explanations if you wan to set them up.
-- The `start_imaging_file` is a temporary file that the system uses to communicate with the Nikon software to start the imaging once a staining is done.  
-
-
+  - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a 0. 0 means no sample to image. 1 means start imaging of the sample or sample number 1. Or another number if there are multiple samples.)
+  - For the 'imaging_output_folder' specifiy the path were the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)`
 
 - Make sure the recevoir is on the right side of the pump.
 
