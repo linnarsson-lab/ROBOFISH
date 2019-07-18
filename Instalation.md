@@ -1,30 +1,3 @@
-# Environment setup
-### Install Ubuntu terminal
-- Go to: Control Panel - Programs - Turn Windows Features On Or Off
-- Enable "Windows Subsyustem for Linux" and click OK
-- Restart computer
-- Go to: Microsoft Store and seach for Ubuntu
-- Install the Ubuntu terminal
-- Open the terminal and pin the Ubuntu terminal to the taskbar for convenience
-  
-### Install Anaconda
-- Install Anaconda by: sudo wget https://repo.continuum.io/archive/ <VERSION>
-- In my case: sudo wget https://repo.continuum.io/archive/Anaconda3-2019.03-Linux-x86_64.sh
-- Install by: sudo bash Anaconda <VERSION>
-- In my case: sudo bash Anaconda3-2019.03-Linux-x86_64.sh
-  
-### Make an environment
-- In the Ubuntu terminal
-- Create a new environment: `conda create --name <NAME> pyton=3.7`
-- Activate the environment: `source activate <NAME>`
-  
-### Install the dependencies
-- Install the python dependencies: `conda install numpy pyyaml pyserial`
-- Install the python dependencies: `pip install ruamel.yaml pushbullet.py` (these are not available on conda)
-
-
-
-
 # WINDOWS
 # Environment setup
 ### Install Anaconda
@@ -59,7 +32,7 @@ I set up the system first as it is on the other computer. Afterwards, make the u
 The user program is the main interface for the user to give expermental parameters to the system.  
 With the user program you can open a text file (FISH2_System_datafile.yaml) that contains all metadata of the system and the experiments. This data is uploaded to a central database that the system can acces to perform the correct experiment.
 - Open the FISH_System_datafile_template.yaml
-- Edit the data if needed and save as FISH_System_datafile.yaml. This is the main entry point for data (eperimental parameters, settings, etc.) for the user. For now it is not needed to change any data.
+- Edit the data if needed and save as FISH_System_datafile.yaml. This is the main entry point for data (experimental parameters, settings, etc.) for the user. For now it is not needed to change any data.
 - Start a new Anaconda Prompt and activate your environment using: `activate <NAME>`
 - Change directory to the folder with the ROBOFISH code: `cd <PATH>` for instance if it is on your desktop: `cd Desktop\ROBOFISH`
 - Start the user program with: `python FISH2_user_program.py` (CHANGE TO ROBOFISH)
