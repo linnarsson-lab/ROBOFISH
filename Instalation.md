@@ -39,7 +39,7 @@
 ### Install the dependencies
 - Install the python dependencies: `conda install numpy pyyaml pyserial`
 - Install the python dependencies: `pip install ruamel.yaml pushbullet.py` (these are not available on conda)
-- Install Jupyter Lab: conda install `-c conda-forge jupyterlab`
+- Install Jupyter Lab: `conda install -c conda-forge jupyterlab`
 - Install Notepadd++ from: https://notepad-plus-plus.org
 
 # ROBOFISH setup
