@@ -31,7 +31,7 @@ I set up the system first as it is on the other computer. Afterwards, make the u
 ### Start user program
 The user program is the main interface for the user to give expermental parameters to the system.  
 With the user program you can open a text file (FISH2_System_datafile.yaml) that contains all metadata of the system and the experiments. This data is uploaded to a central database that the system can acces to perform the correct experiment.
-- Open the FISH_System_datafile_template.yaml
+- Open the FISH_System_datafile_template.yaml by clicking on it.
 - Edit the data if needed and save as FISH_System_datafile.yaml. This is the main entry point for data (experimental parameters, settings, etc.) for the user. For now it is not needed to change any data.
 - Start a new Anaconda Prompt and activate your environment using: `activate <NAME>`
 - Change directory to the folder with the ROBOFISH code: `cd <PATH>` for instance if it is on your desktop: `cd Desktop\ROBOFISH`
