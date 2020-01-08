@@ -69,5 +69,5 @@ The next cell in the Jupyter lab notebook will contain the functions to initiate
   - For the 'imaging_output_folder' specifiy the path were the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)`
 
 - Make sure the recevoir is on the right side of the pump.  
-- If something goes wrong and you want to restart the initiation, you probably need to restart the kernel of the notebook `kernel --> Restart kernel`. This is because the COM ports might be dedicated already and can not be reassigned by the same python kernel. 
+- If something goes wrong and you want to restart the initiation, you probably need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports might be dedicated already and can not be reassigned by the same python kernel. 
 
