@@ -21,11 +21,8 @@
 
 
 I set up the system first as it is on the other computer. Afterwards, make the updates to make it nice and then upload everything here.
-- Choose temperature controller
-- COM ports in the datafile
 - ports with numbers and not names
 - extra dictionary which says which buffers are in which port for the logging
-- make pushbullet dictionary in datafile
 
 
 ### Start user program
@@ -37,7 +34,7 @@ With the user program you can open a text file (FISH2_System_datafile.yaml) that
 - Change directory to the folder with the ROBOFISH code: `cd <PATH>` for instance if it is on your desktop: `cd Desktop\ROBOFISH`
 - Start the user program with: `python FISH2_user_program.py` (CHANGE TO ROBOFISH)
 - A database will be created and the datafile will open.
-- Edid the data if needed and close.
+- You do not need to change anything at this point but you could add your name after operator. For yaml files it is important to always put a space between the colon and value, like: `Operator: Lars`. Save and close.
 - Hit enter if all data is updated and Notepad++ is closed
 - A dialoage will open asking if any of the buffers need to be primed which is not needed at this point. Close to continue.
 - The information will now be uploaded to the central database.
@@ -58,8 +55,21 @@ Next you need to find the communication ports with which the computer can commun
 - If you know the identifier of the machine give it to the function as string: `FISH2_functions.find_address(identifier='XYZ123')`.
 - Follow the instruction of the `find_address()` function.
 - Once you have the identifier and USB port, fill it in in the FISH_System_datafile. Either fill in the unique machine identifire in the Machine_identification table, or fill in the USB port in the Fixed_USB_port table. Preferentially use the Machine_identification method. Different strategies can be used for different machines. Make sure there is a space between name and the value in the FISH_System_datafile, like: MXValve1: XYZ123.
+- In the Ports table add the port numbers the buffers are connected to. The port numbers are written on the multi valve front. The left valve (for recervoir/buffers/waste/hybridization chamer) is numbered 1 through 10. The right valve (for hybridization mixes) is labeled 11 through 20 in the program. 
 - In the Machines table, put a 1 for each machine that is connected.
-- Save and close the Notepad. In the user program hit enter to save the data and click away the prime port popup.
+- Save and close the Notepad. In the user program hit enter to save the data and close the prime port popup.
+
+### Pushbullet communication
+The system communicates with the user with push messages through the program Pushbullet. The system will update you about the status of the experiment and will let you know if any of the buffers are getting low. Furthermore, it will sound the alarm is something is wrong. You will need an account at Pushbullet to use this functionality. 
+- Go to the website of [Pushbullet](https://www.pushbullet.com/). 
+- Make an account.
+- Go to settings and create and acces token. This will be your address.
+- Install the Pushbullet [app](https://www.pushbullet.com/apps) on your [phone](https://play.google.com/store/apps/details?id=com.pushbullet.android&referrer=utm_source%3Dpushbullet.com) (android only), web browser or Windows.
+- In the user program open the datafile by typing `part`.
+- In the Operator_address table add your name in lower case and the Pushbullet token.
+- You can add up to 10 operators.
+- Save and close the datafile, hit enter in the user program.
+- In the popup window indicate that you updated the Operator_address.
 
 ### Initiate the system
 The next cell in the Jupyter lab notebook will contain the functions to initiate the system. First make sure all paths in this cell are correct.
@@ -68,6 +78,9 @@ The next cell in the Jupyter lab notebook will contain the functions to initiate
   - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a 0. 0 means no sample to image. 1 means start imaging of the sample or sample number 1. Or another number if there are multiple samples.)
   - For the 'imaging_output_folder' specifiy the path were the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)`
 
-- Make sure the recevoir is on the right side of the pump.  
-- If something goes wrong and you want to restart the initiation, you probably need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports might be dedicated already and can not be reassigned by the same python kernel. 
+- Make sure the recevoir is on the right side of the pump. OTHERWISE CHANGE THIS TO THAT.....
+- If something goes wrong and you want to restart the initiation, you probably need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports will be dedicated already and can not be reassigned by the same python kernel. 
+
+
+find padding volume  
 
