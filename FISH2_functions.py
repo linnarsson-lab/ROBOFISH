@@ -125,7 +125,7 @@ def find_address(identifier = None):
                 else:
                     print('    Invalid awnser, type Y for Yes, or N for No')
             if awnser == 'n':
-                break
+                return
         print('Device address: {}'.format(port[0].device))
         try:
             print('Device serial_number: {}'.format(port[0].serial_number))
@@ -368,6 +368,7 @@ class FISH2():
         Input:
         `db_path`(str): Full path to database.
         `ignore_flags`(bool): Option to ignore the flags and update everything.
+                              If False, it only updates the Tables with new information.
                               Pause flag is not ignored.
 
         """
@@ -606,7 +607,7 @@ class FISH2():
 
     def push(self, short_message='', long_message=''):
         """
-        Wrapper around the send_push() function from peripherals..
+        Wrapper around the send_push() function from peripherals.
         Input:
         `short_message`(str): Subject of message.
         `long_message`(str): Body of message.
@@ -625,26 +626,32 @@ class FISH2():
         Function that checks if any of the buffers is running low. 
         It will notify the Operator if any of the buffers need a refill
         The minimal volumes can be defined with the user program in the 
-        Alert_volume table.
+        Alert_volume table. Waste is checked if it is too full.
 
         """
         #Check current volumes
         almost_empty = []
         for p, v in self.Volumes.items():
-            print('p,v: {} {}'.format(p,v))
             if isinstance(v, int) or isinstance(v, float): #Do not check unconnected buffers
-                if p != 'Waste' and v < self.Alert_volume[self.getPort(p)]:
+                #Check if buffer has a name and alert volume
+                if self.Ports[p] == 'None' or self.Alert_volume[p] == 'None':
+                    raise Exception('Port {} is not correctly configured, a volume is listed but no name or no Alert volume is specified. Name: {}, Alert_volume: {}. Please update datafile.'.format(p,self.Ports[p], self.Alert_volume[p]))
+                #Check waste
+                elif p == self.Ports_reverse['Waste']:
+                    if v > self.Alert_volume[p]:
+                        almost_empty.append([p, v])
+                #Check buffers
+                elif v < self.Alert_volume[p]:
                     almost_empty.append([p, v])
-                if p == 'Waste' and v > self.Alert_volume['Waste']:
-                    almost_empty.append([p, v])
+                else:
+                    pass
+
         #Send message
         if almost_empty != []: 
             long_message = 'Replace:\n'
             for i in almost_empty:
-                print('i: {}'.format(i))
                 #Get the name of the buffer connected to the port
-                if i[0] != 'Waste' and i[0] != 'RunningBuffer':
-                    print('i[0]: {}'.format(i[0]))
+                if i[0] != 'RunningBuffer':
                     buffer_name = self.Ports[i[0]]
                 else:
                     buffer_name = i[0]
@@ -667,10 +674,11 @@ class FISH2():
         #Find the buffer code of the buffer
         port = self.getPort(target, port_number=False)
 
-        #Update database
-        if target == 'Waste':
-            self.Volumes[port] = self.Volumes['Waste'] + volume
-            perif.updateValueDB(self.db_path, 'Volumes', column = 'Waste', operation = '+', value = volume)
+        #Update waste by summing
+        if port == self.Ports_reverse['Waste']:
+            self.Volumes[port] = self.Volumes[port] + volume
+            perif.updateValueDB(self.db_path, 'Volumes', column = port, operation = '+', value = volume)
+        #Update buffer by substacting
         else:
             self.Volumes[port] = self.Volumes[port] - volume
             perif.updateValueDB(self.db_path, 'Volumes', column = port, operation = '-', value = volume)
@@ -843,12 +851,15 @@ class FISH2():
                 self.updateBuffer('Waste', (2*self.pump.syringe_ul), check=False)  
         #Prime port
         else:
-            self.extractBuffer(port, self.Padding[port])
-            time.sleep(2) #In case of viscous buffers
-            self.resetReservoir(200, update_buffer=True)
-            if update==True:
-                self.updateBuffer(port, self.Padding[port], check=False)  
-                self.updateBuffer('Waste', self.Padding[port], check=True)  
+            if self.Padding[port] != 'None':
+                self.extractBuffer(port, self.Padding[port])
+                time.sleep(2) #In case of viscous buffers
+                self.resetReservoir(200, update_buffer=True)
+                if update==True:
+                    self.updateBuffer(port, self.Padding[port], check=False)  
+                    self.updateBuffer('Waste', self.Padding[port], check=True)  
+            else:
+                print('Port: {}, can not be primed, no Padding volume is specified.'.format(port))
 
     def primeSystem(self, system_dry = False):
         """
@@ -863,7 +874,8 @@ class FISH2():
         """
         self.L.logger.info('Priming system')
         master = Tk()
-        Label(master, text="Prime:").grid(row=0, sticky=W)
+        Label(master, text="Prime buffers:").grid(row=0, sticky=W)
+        print('Select buffers to prime by aspiration (Do not select Waste and output lines like flow cells.)')
 
         #User input to make a priming selection
         buttons = {}
@@ -872,7 +884,6 @@ class FISH2():
             Checkbutton(master, text='Port: {:4}, Buffer {}'.format(p, self.Ports[p]), variable=buttons[p]).grid(row=i+1, sticky=W)
         mainloop()
         response = {k: buttons[k].get() for k in buttons.keys()}
-        print('PrimeSystem response: {}'.format(response))
 
         #Prime the EX_pump and reservoir
         if system_dry == True:
@@ -952,7 +963,7 @@ class FISH2():
 
         print('''A pop-up window will appear. Check the boxes of the buffers that need to be cleaned.
         Tick the "aspirate" box if the buffer needs to be cleaned by first aspirating the remaining buffer and then washing with RunningBuffer.
-        Tick the "dispence" box if the tubes need to be washed by flushing with RunningBuffer.
+        Tick the "dispence" box if the tubes need to be washed by flushing with RunningBuffer, use for Flow cells.
         Tick the "HYBMIX" box if a hybridization mix is connected and needs to be cleaned.\n''')
         master = Tk()
         Label(master, text="Clean:").grid(row=0, sticky=W)
@@ -960,22 +971,22 @@ class FISH2():
         #User input to make a cleaning selection
         buttons = {}
         for i, p in enumerate(self.Ports.keys()):
-            buttons['Aspirate_{}'.format(p)] = IntVar()
-            Checkbutton(master, text='Port: {:4}, Buffer {} Aspirate:'.format(p, self.Ports[p]), variable=buttons['Aspirate_{}'.format(p)]).grid(row=i+1, column=1, sticky=W)
-            buttons['Dispence_{}'.format(p)] = IntVar()
-            Checkbutton(master, text='Port: {:4}, Buffer {} Dispence:'.format(p, self.Ports[p]), variable=buttons['Dispence_{}'.format(p)]).grid(row=i+1, column=2, sticky=W)
-            buttons['HYBMIX_{}'.format(p)] = IntVar()
-            Checkbutton(master, text='Port: {:4}, Buffer {} HYBMIX:'.format(p, self.Ports[p]), variable=buttons['HYBMIX_{}'.format(p)]).grid(row=i+1, column=3, sticky=W)
+            if p != 'RunningBuffer':
+                buttons['Aspirate_{}'.format(p)] = IntVar()
+                Checkbutton(master, text='Port: {:4}, Buffer {:10} ASPIRATE.'.format(p, self.Ports[p]), variable=buttons['Aspirate_{}'.format(p)]).grid(row=i+1, column=1, sticky=W)
+                buttons['Dispence_{}'.format(p)] = IntVar()
+                Checkbutton(master, text='Port: {:4}, Buffer {:10} DISPENSE.'.format(p, self.Ports[p]), variable=buttons['Dispence_{}'.format(p)]).grid(row=i+1, column=2, sticky=W)
+                buttons['HYBMIX_{}'.format(p)] = IntVar()
+                Checkbutton(master, text='Port: {:4}, Buffer {:10} HYBMIX.'.format(p, self.Ports[p]), variable=buttons['HYBMIX_{}'.format(p)]).grid(row=i+1, column=3, sticky=W)
         mainloop()
         response = {k: buttons[k].get() for k in buttons.keys()}
-        print('CleanSystem response: {}'.format(response))
 
         #Clean the ports that need aspiration
         aspirate_vol = 0
         for k, v in response.items():
             if k.startswith('Aspirate') and v == 1:
                 port = k.split('_')[1]
-                self.L.logger.info('    Cleaning port: {} connected to buffer: {}'.format(port, self.Port[port]))
+                self.L.logger.info('    Cleaning port: {} connected to buffer: {}'.format(port, self.Ports[port]))
                 self.prime(port, update=False) #Empties the tube if the needle is not in the liquid.
                 self.prime(port, update=False) #twice to clean completely
                 if wash == True:
@@ -984,7 +995,7 @@ class FISH2():
                     self.extractDispenseRunningBuffer(self.Padding[port], port, padding=False)
                     self.prime(port, update=False)
                     aspirate_vol += self.Padding[port] * 2
-                    self.L.logger.info('    Washed tube and needle twice of port {} with buffer: {}'.format(port, self.Port[port]))
+                    self.L.logger.info('    Washed tube and needle twice of port {} with buffer: {}'.format(port, self.Ports[port]))
 
         #Clean ports that need dispensing
         dispence_vol = 0
@@ -1004,11 +1015,11 @@ class FISH2():
                 self.cleanHybmixTube(port, cycles=hybmix_cycles, wash_volume=hybmix_wash_volume)
 
         #Clean the reservoir
-        self.resetReservoir(replace_volume=1250, update_buffer=True)
-        self.resetReservoir(replace_volume=1250, update_buffer=True)
-        self.L.logger.info('    Cleaned reservoir with 2500ul of {}'.format(self.Ports['RunningBuffer']))
+        self.resetReservoir(replace_volume=self.pump.syringe_ul, update_buffer=True)
+        self.resetReservoir(replace_volume=self.pump.syringe_ul, update_buffer=True)
+        self.L.logger.info('    Cleaned reservoir with {}ul of {}'.format(2*self.pump.syringe_ul, self.Ports['RunningBuffer']))
 
-        used_vol = 2500 + aspirate_vol + dispence_vol
+        used_vol = 2*self.pump.syringe_ul + aspirate_vol + dispence_vol
         self.updateBuffer('RunningBuffer', used_vol, check=True)
         self.updateBuffer('Waste', used_vol, check=True)
         self.L.logger.info('System cleaned by user.')  
@@ -1616,7 +1627,7 @@ class FISH2():
         self.dispenseBuffer(target, (Hybmix_vol - (self.Padding['Degass'] + (25*steps)))) #Dispense remaining
             #Padding
             #Stop in degasser, In case there is a bubble between Hybmix_probes and
-            #SSC in the reservoir.
+            #Runninguffer in the reservoir.
         self.dispenseBuffer(target, self.Padding['Degass']) 
         time.sleep(60) 
         self.dispenseBuffer(target,(pad - self.Padding['Degass'])) #Dispense remaining

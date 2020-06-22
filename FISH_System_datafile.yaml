@@ -3,24 +3,24 @@
 FISHSystem:
     Parameters:
         #   Operator running the experiment. Same as name linked to Pushbulet code, lower case
-        Operator: 
+        Operator: lars
         #   Machine the experiment is run on
-        Machine: 
+        Machine: ROBOFISH2
         ########## EXPERIMENT 1 ##########
         #   Experiment number: Initials with date, like: LBEXP20181220-1
-        EXP_number_1: 
+        EXP_number_1: Test1
         #   YYYY-MM-DD HH:MM
-        Start_date_1: 
+        Start_date_1: 20200616
         #   Chamber1 or Chamber2
-        Chamber_EXP_1: 
+        Chamber_EXP_1: Chamber1
         #   First Hybridization time in hours (encoding probes)
-        Hyb_time_1_A: 
+        Hyb_time_1_A: 0.08
         #   Second Hybridization time in hours (amplifier probes)
-        Hyb_time_1_B: 
+        Hyb_time_1_B:
         #   Third Hybridization time in hours (detection probes)
-        Hyb_time_1_C: 
+        Hyb_time_1_C:
         #   Total number of rounds
-        Target_cycles_1: 
+        Target_cycles_1: 2
         #   Species:
         Species_1:
         #   Sample identification number
@@ -40,14 +40,14 @@ FISHSystem:
         #   Overlap percentage between fields of view
         Overlapping_percentage_1:
         #   List of lists with coordinates of the roi's, like: [[1, 120], [121, 237]]
-        roi_1: [[0,0]]
+        roi_1: [[0, 0]]
         ########## EXPERIMENT 2 ##########
         #   Experiment number: Initials with date, like: LBEXP20181220-2
-        EXP_number_2: 
+        EXP_number_2:
         #   YYYY-MM-DD HH:MM
         Start_date_2:
         #   Chamber1 or Chamber2
-        Chamber_EXP_2: 
+        Chamber_EXP_2:
         #   First Hybridization time in hours (encoding probes)
         Hyb_time_2_A: 4
         #   Second Hybridization time in hours (amplifier probes)
@@ -55,7 +55,7 @@ FISHSystem:
         #   Third Hybridization time in hours (detection probes)
         Hyb_time_2_C: 2
         #   Total number of rounds
-        Target_cycles_2: 
+        Target_cycles_2:
         #   Species:
         Species_2:
         #   Sample identification number
@@ -75,47 +75,47 @@ FISHSystem:
         #   Overlap percentage between fields of view
         Overlapping_percentage_2:
         #   List of lists with coordinates of the roi's, like: [[1, 120], [121, 237]]
-        roi_2: [[0,0]]
+        roi_2: [[0, 0]]
         ########## OTHER ##########
         # Name of executing protocol for documentation
-        Program: 
+        Program:
         #   Volume of hybmix in ul
-        Hybmix_volume: 
+        Hybmix_volume: 500
         #   Temperature used for staining, washing and stripping
-        Staining_temperature: 
+        Staining_temperature: 37
         #   Temperature used for the readout probes
-        Readout_temperature: 
+        Readout_temperature: 22
         #   temperature used for the stripping
-        Stripping_temperature: 
+        Stripping_temperature: 22
         #   Temperature used for heatshock
-        Heatshock_temperature: 
+        Heatshock_temperature: 22
         #   Temperature used for imaging
-        Imaging_temperature: 
+        Imaging_temperature: 22
     # Volume of all buffers in ul, Integer/float
     Volumes:
-        RunningBuffer:
+        RunningBuffer: 586531.0
         # Port 1-10 on acuator valve 1
-        P1: 
-        P2:
-        P3:
-        P4:
-        P5:
-        P6:
-        P7:
-        P8: 
-        P9: 
-        P10: 
+        P1: None
+        P2: 42562.0
+        P3: None
+        P4: 674857.0
+        P5: 20000.0
+        P6: 4050.0
+        P7: None
+        P8: None
+        P9: None
+        P10: None
         # Port 1-10 on acuator valve 2 are numberd 11-20.
-        P11:
-        P12:
-        P13:
-        P14:
-        P15:
-        P16:
-        P17:
-        P18:
-        P19:
-        P20:
+        P11: None
+        P12: None
+        P13: None
+        P14: None
+        P15: None
+        P16: None
+        P17: None
+        P18: None
+        P19: None
+        P20: None
     # Name of the buffer connected to the ports.
     # Use "Waste" for the connection to the waste, "Valve2" for the connection to Valve 2
     # and use HYBXX for the hybridization mixes where XX are a number, like HYB05 or HYB10.
@@ -123,16 +123,16 @@ FISHSystem:
         # Buffer connected to the Syringe pump
         RunningBuffer: SSC2X
         # Port 1-10 on acuator valve 1
-        P1: 
+        P1:
         P2: WB
         P3: Chamber1
         P4: Waste
         P5: SB
         P6: IB
         P7: Valve2
-        P8: 
-        P9: 
-        P10: 
+        P8:
+        P9:
+        P10:
         # Port 1-10 on acuator valve 2 are numberd 11-20
         P11: HYB01
         P12: HYB02
@@ -152,16 +152,16 @@ FISHSystem:
     # "C2_14_B" for Chamber 2, cycle 14, hybridization 2 (detection probes)
     Hybmix:
         # Port 1-10 on acuator valve 1
-        P1: 
+        P1:
         P2:
         P3:
         P4:
         P5:
         P6:
         P7:
-        P8: 
-        P9: 
-        P10: 
+        P8:
+        P9:
+        P10:
         # Port 1-10 on acuator valve 2 are numberd 11-20.
         P11:
         P12:
@@ -180,7 +180,7 @@ FISHSystem:
         Chamber1:
             Hybridization01:
                 DAPI:
-                Atto425:
+                Atto425: Test1
                 FITC:
                 Cy3:
                 TxRed:
@@ -844,26 +844,26 @@ FISHSystem:
      #If you switch off a machine set the value below to zero. Then the machine will not be checked for errors anymore.
     Machines:
         CavroXE1000: 0
-        CavroXCalibur: 0
-        MXValve1: 0
-        MXValve2: 0
-        Degassi: 1
+        CavroXCalibur: 1
+        MXValve1: 1
+        MXValve2: 1
+        Degassi: None
         ThermoCube1: 0
         ThermoCube2: 0
         YoctoThermistor: 0
-        TC720: 0
+        TC720: 1
     #Put the identifiers of each machine here. This will be used to find the USB port for each device.
     #Find the ports using the "find_address()" Function, then paste the device serial number here.
     #This is the safest method.
     Machine_identification:
         CavroXE1000:
         CavroXCalibur:
-        MXValve1:
-        MXValve2:
+        MXValve1: A105XW1IA
+        MXValve2: AI040PQVA
         ThermoCube1:
         ThermoCube2:
         YoctoThermistor:
-        TC720:
+        TC720: A505CAYZA
     #If the identifier can not be found, you can use a fixed USB port.
     #Find the device address using the "find_address()" function and put it below.
     #On Windows it is formatted as: "COMX" where X is a number.
@@ -890,7 +890,7 @@ FISHSystem:
         operator7:
         operator8:
         operator9:
-        operator10:    
+        operator10:
     # ul between the valve and the target component.
     # For instance, to pump Hyb mix into the chamber the distance from the recevoir (valve) needs to be bridged.
     # The volume of the tubes running from the valve to the chamber is called the padding volume.
@@ -900,45 +900,45 @@ FISHSystem:
         # Volume to the degasser
         Degass: 150
         # Port 1-10 on valve 1
-        P1: 
+        P1:
         P2: 250
         P3: 897
-        P4: 
+        P4:
         P5: 650
         P6: 250
-        P7: 
-        P8: 
-        P9: 
-        P10: 
+        P7:
+        P8:
+        P9:
+        P10:
         # Port 1-10 on valve 2 are numberd 11-20. 
         # Measure full volume from the end of the recervoir on Valve1 to the target
-        P11: 750
-        P12: 750
-        P13: 750
-        P14: 750
-        P15: 750
-        P16: 750
-        P17: 750
-        P18: 750
-        P19: 750
-        P20: 750
+        P11: 1020
+        P12: 1020
+        P13: 1020
+        P14: 1020
+        P15: 1020
+        P16: 1020
+        P17: 1020
+        P18: 1020
+        P19: 1020
+        P20: 1020
     # Volume in ul below which the system will notifiy the user. 
     # If a connected buffer gets below the specified volume it will send a push message to the operator,
     # everytime the system checks for the buffer volumes.
     # For the "Waste", a message will be send if the volume is above the specified value.
     Alert_volume:
-        RunningBuffer: 50000
+        RunningBuffer: 200000
         # Port 1-10 on valve 1
-        P1: 
+        P1:
         P2: 20000
         P3: 897
         P4: 900000
         P5: 10000
-        P6: 1500
-        P7: 
-        P8: 
-        P9: 
-        P10: 
+        P6: 2000
+        P7:
+        P8:
+        P9:
+        P10:
         # Port 1-10 on valve 2 are numberd 11-20. 
         P11:
         P12:

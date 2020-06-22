@@ -404,7 +404,6 @@ def newFISHdb(db_name):
         #Buffer volumes
             cursor.execute("""CREATE TABLE Volumes
                             (RunningBuffer REAL, 
-                            Waste REAL,
                             P1 REAL,
                             P2 REAL,
                             P3 REAL,
@@ -574,7 +573,6 @@ def newFISHdb(db_name):
          #Alert volume
             cursor.execute("""CREATE TABLE Alert_volume
                             (RunningBuffer REAL, 
-                            Waste REAL,
                             P1 REAL,
                             P2 REAL,
                             P3 REAL,
