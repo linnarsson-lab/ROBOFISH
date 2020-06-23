@@ -84,3 +84,24 @@ The next cell in the Jupyter lab notebook will contain the functions to initiate
 
 find padding volume  
 
+# NIS Elements job
+### Install job
+- job inport instructions
+
+### Set up color channels
+They need to be either FITC, CY3 etc.....
+- matching the ROBOFISH targets
+  
+### Enable info file renaming  
+The ROBOFISH program makes an info file for every round of labeling, which contains all metadata for that round and puts it in the folder with all the images. The info file contains the Targets given by the user which couples image colour channel with the target gene or target barcoding bit name.  
+To match this round info file with a certain image, the Imaging job renames the info file to match the file name of the image. The images get a "CountXXXXX" number by the imaging Job, and the imaging Job renames the info file with same "CountXXXX" number. To do this Nis Elements needs to run the `Rename_info_file.py` script. The following steps makes Python installed by Anaconda available for the whole system. Skip these steps if python is already available; test this by running `python` in a Windows Command Prompt (Not the Anaconda prompt). If this gives you a Python interpreter you should be set. If not follow the next steps:
+- In the Anaconda prompt enter `where python`. Copy the path withtout the `\python.exe`.
+- In Windows search enter `Environment variables` and open the `Edit the system environment variales`
+- Under Advanced click on `Environment variables...` a new window will appear.
+- Double click on the `Path` variable under your user name and a new window will appear.
+- Click New and add the copied path like: `C:\<User path to anaconda>\Anaconda3`.
+- Again add a new but now append `\Scripts\` to the coppied path like: `C:\<User path to anaconda>\Anaconda3\Scripts`.
+- Click Ok on all windows.
+- To test if it worked, open a new Windows Command Prompt and type `python`. You should now see the python interpreter. 
+
+
