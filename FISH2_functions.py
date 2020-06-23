@@ -5,7 +5,8 @@
 #Python version: 3.5.1
 
 ## CONTENT ##
-    # Initiation and hardware initiation
+    # Hardware address
+    # Class initiation
     # Experimental parameters management
     # Hardware management
     # System calibration (utility functions)
@@ -15,7 +16,8 @@
     # Function decorator
     # Fluid handling, Higher level functions
     # Temperature control
-    # Start imaging functions
+    # Imaging functions
+    # Error checking
     # Scheduler
 
 ################################################################################
@@ -72,7 +74,9 @@ try:
 except ModuleNotFoundError:
     print('Module Py_TC720 not found. Ignore if machine is not in use')
 
-################################################################################
+#=============================================================================
+# Hardware address      
+#=============================================================================    
 
 def find_address(identifier = None):
     """
@@ -134,7 +138,9 @@ def find_address(identifier = None):
     
     return port[0]
 
-################################################################################
+#=============================================================================
+# Initiation  
+#=============================================================================    
 class FISH2():
     """
     Class containing all functions for performing the experiment
@@ -539,8 +545,8 @@ class FISH2():
         the "FISH_System_datafile.yaml".
         Input:
         `volume`(int): Volume to test as padding volume
-        `air_port`(str): Name of port that is disconnected. Like: 'WB'
-        `target`(str): Target to push to. Like: 'Chamber1'
+        `air_port`(str): Name of port that is disconnected. Like: 'P3'
+        `target`(str): Target to push to. Like: 'Chamber1' or 'P2'
 
         """
         input('This function will push a tiny air bubble to the hybridization chamber, if it just reaches it you have found the padding volume. Press Enter to continue...')
@@ -549,7 +555,7 @@ class FISH2():
         self.connectPort(target)
         self.pump.extract(volume_ul = volume, from_port = 'input', execute=True)
         self.pump.dispense(volume_ul = (volume+20), to_port = 'output', execute=True)
-        input('If the padding volume of {}ul is correct, add it to the "FISH_System_datafile.yaml" for the target: {}. Press Enter to continue...'.format(volume, target))
+        print('If the padding volume of {}ul is correct, add it to the "FISH_System_datafile.yaml" for the target: {}. Press Enter to continue...'.format(volume, target))
         
 
     def findPaddingVolumeHYBmix(self, volume, hybmix):
@@ -561,10 +567,10 @@ class FISH2():
         the given volume is not sufficient.
         Input:
         `volume`(int): Volume to test as padding volume
-        `hybmix`(str): Hybmix to aspirate. Like: 'HYB01'0
+        `hybmix`(str): Hybmix to aspirate. Like: 'HYB01'
 
         """
-        input('Place some liquid (use same viscosity as real experiment) in the system. This function will aspirate the volume and you need to see if the liquid reaches the reservoir tube. The best is if it just reaches it. Press Enter to continue...')
+        input('Place some liquid (use same viscosity as real experiment) in the system. This function will aspirate the volume and you need to see if the liquid reaches the reservoir tube. The best is if it just reaches the reservoir. Press Enter to continue...')
         self.connectPort(hybmix)
         self.pump.extract(volume_ul = volume , from_port ='output', execute=True)
         self.resetReservoir(0)
@@ -577,9 +583,9 @@ class FISH2():
         self.connectPort(hybmix)
         self.pump.extract(volume_ul = 1000 , from_port = 'output', execute=True)
         self.resetReservoir(200)
-        input('If the padding volume of {}ul is correct, add it to the "FISH_System_datafile.yaml" for the target: {}. Press Enter to continue...'.format(volume, target))
+        print('If the padding volume of {}ul is correct, add it to the "FISH_System_datafile.yaml" for the port: {}. Press Enter to continue...'.format(volume, hybmix))
         
-    def findPaddingVolumeBuffer(self, volume, buffer_intrest, air_port):
+    def findPaddingVolumeBuffer(self, volume, port, air_port):
         """
         find the padding volume between valve and a buffer by testing a volume.
         If you see the buffer after the air bubble in the reservoir, the volume is
@@ -592,17 +598,17 @@ class FISH2():
         """
         print('Make sure the tube of the buffer of interest is filled with air.')
         input('Press Enter to start and aspirate {}ul of the buffer. Please look at the buffer and note where it ends up. Press Enter to continue...'.format(volume))
-        self.extractBuffer(buffer_intrest, volume)
+        self.extractBuffer(port, volume)
         print('Look at reservoir, if you see that the buffer passed the valve and is just in the reservoir tube, the volume is good.')
         input('Press enter to continue, this will fill the tube with air so you can perform the test again...')
         self.resetReservoir(0)
         self.extractBuffer(air_port, (volume + 200))
-        self.connectPort(buffer_intrest)
+        self.connectPort(port)
         self.pump.dispense(volume_ul=(volume+200), to_port='output', execute=True)
-        input('If the padding volume of {}ul is correct, add it to the "FISH_System_datafile.yaml" for the target: {}. Press Enter to continue...'.format(volume, target))
+        print('If the padding volume of {}ul is correct, add it to the "FISH_System_datafile.yaml" for the port: {}. Press Enter to continue...'.format(volume, port))
 
 #=============================================================================    
-# Communication with user with push messages
+# Communication with user by push messages
 #=============================================================================
 
     def push(self, short_message='', long_message=''):
@@ -832,417 +838,6 @@ class FISH2():
             self.updateBuffer('RunningBuffer', replace_volume, check=False)  
             self.updateBuffer('Waste', replace_volume, check=False)
 
-    def prime(self, port, update=True):
-        """
-        Prime the tubing (and needle) of the buffer, when the system is dry or
-        after a buffer has been replaced.
-        Input:
-        `port`(str): Port to prime
-        `update`(bool): Update the buffer volume. 
-            Select True when priming. Select False when cleaning the tubes.
-
-        """
-        #Prime RunningBuffer
-        if port == 'RunningBuffer':
-            self.resetReservoir(replace_volume=self.pump.syringe_ul)
-            self.resetReservoir(replace_volume=self.pump.syringe_ul)
-            if update == True:
-                self.updateBuffer('RunningBuffer', (2*self.pump.syringe_ul), check=False)
-                self.updateBuffer('Waste', (2*self.pump.syringe_ul), check=False)  
-        #Prime port
-        else:
-            if self.Padding[port] != 'None':
-                self.extractBuffer(port, self.Padding[port])
-                time.sleep(2) #In case of viscous buffers
-                self.resetReservoir(200, update_buffer=True)
-                if update==True:
-                    self.updateBuffer(port, self.Padding[port], check=False)  
-                    self.updateBuffer('Waste', self.Padding[port], check=True)  
-            else:
-                print('Port: {}, can not be primed, no Padding volume is specified.'.format(port))
-
-    def primeSystem(self, system_dry = False):
-        """
-        Primes the ROBOFISH system for operation.
-        Input:
-        `system_dry` (bool): If the tubes are empty and the degasser is empty,
-                        set to True. It will prime the pump and reservoir and
-                        guide you through the priming of the Degassi.
-                        If False it will presume that everything is filled with 
-                        RunningBuffer except for the hyb chambers.
-
-        """
-        self.L.logger.info('Priming system')
-        master = Tk()
-        Label(master, text="Prime buffers:").grid(row=0, sticky=W)
-        print('Select buffers to prime by aspiration (Do not select Waste and output lines like flow cells.)')
-
-        #User input to make a priming selection
-        buttons = {}
-        for i, p in enumerate(self.Ports.keys()):
-            buttons[p] = IntVar()
-            Checkbutton(master, text='Port: {:4}, Buffer {}'.format(p, self.Ports[p]), variable=buttons[p]).grid(row=i+1, sticky=W)
-        mainloop()
-        response = {k: buttons[k].get() for k in buttons.keys()}
-
-        #Prime the EX_pump and reservoir
-        if system_dry == True:
-            print('''\nTo prime the degasser:\n
-            PULL! liquid through the degasser with a syringe. DO NOT PUSH!
-            See manual for detailed instructions. If filled reconnect everything.''')
-            input('Press Enter to when done...')
-            
-            print('Priming pump and reservoir')
-            self.resetReservoir(replace_volume=self.pump.syringe_ul)
-            self.resetReservoir(replace_volume=self.pump.syringe_ul)
-            self.L.logger.info('    Primed degasser, Syringe and reservoir. System_dry = True.')
-            self.updateBuffer('RunningBuffer', (2*self.pump.syringe_ul), check=False)
-            self.updateBuffer('Waste', (2*self.pump.syringe_ul), check=False)  
-            
-        #Prime the buffers selected in the dialog
-        for k, v in response.items():
-            if v == 1:
-                self.prime(k)
-                self.L.logger.info('    Primed port {} connected to buffer {}'.format(k, self.Ports[k]))
-
-        print('''\nPurge the hybridization chambers\n
-        Close the shutoff valve and use the purge valve and a RunningBuffer filled syringe
-        to push out all air bubbles. Open valve afterwards.\n''')
-        input('Press Enter when done and valves are open...')
-            
-        self.L.logger.info('Primed the system, system_dry = {}.'.format(system_dry))
-        
-    def cleanHybmixTube(self, port, cycles=5, wash_volume=200):
-        """
-        Wash the tubbing of the specified port with Running buffer.
-        `port`(str): Port number to wash.
-        `cycles`(int): Number of wash cycles. Default 5.
-        `wash_volume`(int): Extra volume to wash the Eppendorff tube with.
-
-        """
-        target = self.getPort(port)
-        #Remove hybmix remainder from tubes
-        self.connectPort(target)
-        self.pump.extract(volume_ul = self.Padding[target], from_port = 'output', execute=True)
-        self.resetReservoir(replace_volume=300)
-
-        vol = self.Padding[target] + wash_volume #Fills Eppendorf tube with extra running buffer.
-        for c in range(cycles):
-            self.pump.extract(volume_ul = vol, from_port = 'input', execute=True)
-            self.connectPort(target)
-            self.pump.dispense(volume_ul = vol, to_port = 'output', execute=True)
-            self.pump.extract(volume_ul = (vol+500), from_port = 'output', execute=True)
-            self.resetReservoir(replace_volume=500)
-
-        used_vol = 300 + ((vol + 500) * cycles)
-        self.updateBuffer('RunningBuffer', used_vol, check=False)
-        self.updateBuffer('Waste', used_vol, check=True)
-        self.L.logger.info('    Washed port {} {} times with RunningBuffer: {}.'.format(target, cycles, self.Ports['RunningBuffer'])) 
-
-    def cleanSystem(self, wash=True, hybmix_cycles=5, hybmix_wash_volume=200):
-        """
-        Clean the system. First it opens a check box where you can select the tubes,
-        hybridization chambers and Hybmix tubes to clean. It also replaces the reservoir.
-        There are 3 modes of cleaning for different targets:
-        "Aspirate" For buffers that first need to be aspirated. Use all conected buffers.
-        "Dispence" For output lines that are individually connected to the waste.
-            Like a flow cell.
-        "HYBMIX" For connections to a Hybmix eppendorff tube or small volume buffers.
-        Input:
-        `wash`(bool): If True is not only empties the tubes but also washes them
-            twice with RunningBuffer for the aspiration option. Default=True
-        `hybmix_cycles`(int): Specific for washing Hybmix tubes. Number of cyles
-            to wash. Default=5
-        `hybmix_wash_volume`(int): Specific for washing hybmix tubes. Extra volume 
-            to wash the Eppendorff tube with. Default=200
-
-        """
-        self.L.logger.info('Cleaning System.')
-        print('Pull up all the needles so that they are not in contact with the liquids.')
-        input('Press Enter when needles are up...\n\n')
-
-        print('''A pop-up window will appear. Check the boxes of the buffers that need to be cleaned.
-        Tick the "aspirate" box if the buffer needs to be cleaned by first aspirating the remaining buffer and then washing with RunningBuffer.
-        Tick the "dispence" box if the tubes need to be washed by flushing with RunningBuffer, use for Flow cells.
-        Tick the "HYBMIX" box if a hybridization mix is connected and needs to be cleaned.\n''')
-        master = Tk()
-        Label(master, text="Clean:").grid(row=0, sticky=W)
-
-        #User input to make a cleaning selection
-        buttons = {}
-        for i, p in enumerate(self.Ports.keys()):
-            if p != 'RunningBuffer':
-                buttons['Aspirate_{}'.format(p)] = IntVar()
-                Checkbutton(master, text='Port: {:4}, Buffer {:10} ASPIRATE.'.format(p, self.Ports[p]), variable=buttons['Aspirate_{}'.format(p)]).grid(row=i+1, column=1, sticky=W)
-                buttons['Dispence_{}'.format(p)] = IntVar()
-                Checkbutton(master, text='Port: {:4}, Buffer {:10} DISPENSE.'.format(p, self.Ports[p]), variable=buttons['Dispence_{}'.format(p)]).grid(row=i+1, column=2, sticky=W)
-                buttons['HYBMIX_{}'.format(p)] = IntVar()
-                Checkbutton(master, text='Port: {:4}, Buffer {:10} HYBMIX.'.format(p, self.Ports[p]), variable=buttons['HYBMIX_{}'.format(p)]).grid(row=i+1, column=3, sticky=W)
-        mainloop()
-        response = {k: buttons[k].get() for k in buttons.keys()}
-
-        #Clean the ports that need aspiration
-        aspirate_vol = 0
-        for k, v in response.items():
-            if k.startswith('Aspirate') and v == 1:
-                port = k.split('_')[1]
-                self.L.logger.info('    Cleaning port: {} connected to buffer: {}'.format(port, self.Ports[port]))
-                self.prime(port, update=False) #Empties the tube if the needle is not in the liquid.
-                self.prime(port, update=False) #twice to clean completely
-                if wash == True:
-                    self.extractDispenseRunningBuffer(self.Padding[port], port, padding=False)
-                    self.prime(port, update=False)
-                    self.extractDispenseRunningBuffer(self.Padding[port], port, padding=False)
-                    self.prime(port, update=False)
-                    aspirate_vol += self.Padding[port] * 2
-                    self.L.logger.info('    Washed tube and needle twice of port {} with buffer: {}'.format(port, self.Ports[port]))
-
-        #Clean ports that need dispensing
-        dispence_vol = 0
-        for k, v in response.items():
-            if k.startswith('Dispence') and v == 1:
-                port = k.split('_')[1]
-                self.extractDispenseRunningBuffer(1000, port, padding=False)
-                self.extractDispenseRunningBuffer(1000, port, padding=False)
-                self.extractDispenseRunningBuffer(1000, port, padding=False)
-                dispence_vol += 3000
-                self.L.logger.info('    Flushing port {} connected to {} with 3000ul of {}'.format(port, self.Ports[port], self.Ports['RunningBuffer']))
-
-        #Clean the Hybmix ports:
-        for k, v in response.items():
-            if k.startswith('HYBMIX') and v == 1:
-                port = k.split('_')[1]
-                self.cleanHybmixTube(port, cycles=hybmix_cycles, wash_volume=hybmix_wash_volume)
-
-        #Clean the reservoir
-        self.resetReservoir(replace_volume=self.pump.syringe_ul, update_buffer=True)
-        self.resetReservoir(replace_volume=self.pump.syringe_ul, update_buffer=True)
-        self.L.logger.info('    Cleaned reservoir with {}ul of {}'.format(2*self.pump.syringe_ul, self.Ports['RunningBuffer']))
-
-        used_vol = 2*self.pump.syringe_ul + aspirate_vol + dispence_vol
-        self.updateBuffer('RunningBuffer', used_vol, check=True)
-        self.updateBuffer('Waste', used_vol, check=True)
-        self.L.logger.info('System cleaned by user.')  
-
-            
-#=============================================================================
-# Secure sleep function
-#=============================================================================
-
-    def check_error_TC1(self, verbose=False):
-        'Check errors on ThermoCube1.'
-        if self.Machines['ThermoCube1'] == 1:
-            try:
-                TC_1_error = self.TC_1.check_error(verbose=False, raise_error=False)
-            except Exception as e:
-                TC_1_error = [False, 'TC_1 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
-            if verbose:
-                print('    TC1: {}'.format(TC_1_error))
-            return TC_1_error
-        else:
-            return None
-
-    def check_error_TC2(self, verbose=False):
-        'Check errors on ThermoCube2.'
-        if self.Machines['ThermoCube2'] == 1:
-            try:
-                TC_2_error = self.TC_2.check_error(verbose=False, raise_error=False)
-            except Exception as e:
-                TC_2_error = [False, 'TC_2 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
-            if verbose:
-                print('    TC2: {}'.format(TC_1_error))
-            return TC_2_error
-        else:
-            return None
-
-    def check_error_yoctopuce(self, alarm_room_temperature=35, temperature_range=5, verbose=False):
-        'Check temperatures ycotupuce thermistor.'
-        if self.Machines['YoctoThermistor'] == 1:
-            try:
-                current_temp = self.temp.get_temp()
-                room_temp = current_temp[1]
-                C1_temp = current_temp[2]
-                C2_temp = current_temp[3]
-                if room_temp > alarm_room_temperature:
-                    roomtemp_yocto_error = [False, 'CURRENT ROOM TEMPERATURE {}C'.format(room_temp)]
-                else:
-                    roomtemp_yocto_error = [True, 'CURRENT ROOM TEMPERATURE {}C'.format(room_temp)]
-
-                #Check if chamber 1 is far off from the target temperature
-                C1_temprature_error = None
-                if self.target_temperature[0] != None:
-                    if C1_temp > (self.target_temperature[0] + temperature_range) or C1_temp < (self.target_temperature[0] - temperature_range):
-                        C1_temprature_error = [False, 'Chamber1 is {}C, and should be at {}C'.format(C1_temp, self.target_temperature[0])]
-                        if verbose:
-                            print('    C1: {}'.format(C1_temperature_error))
-
-                #Check if chamber 2 is far off from the target temperature
-                C2_temprature_error = None
-                if self.target_temperature[1] != None:
-                    if C2_temp > (self.target_temperature[1] + temperature_range) or C2_temp < (self.target_temperature[1] - temperature_range):
-                        C2_temprature_error = [False, 'Chamber2 is {}C, and should be at {}C'.format(C2_temp, self.target_temperature[1])]
-                        if verbose:
-                            print('    C2: {}'.format(TC2_temperature_error))
-                        
-            except Exception as e:
-                temperature_error = [False, 'Could not read temperature from Yocto Thermistor, check connection. Error: {}'.format(e)]
-            if verbose:
-                print('    Temperature: {}'.format(temperature_error))
-            
-            return roomtemp_yocto_error, C1_temperature_error, C2_temprature_error, [room_temp, C1_temp, C2_temp]
-        else:
-            return None, None, None, None
-
-    def check_error_TC720(self, alarm_room_temperature=35, temperature_range=5, verbose=False):
-        'Check errors on TC720'
-        if self.Machines['TC720'] == 1:
-            try:
-                #Check for errors
-                TC720_error = self.TC720.check_error(raise_exception=False)
-                #Check temperature readings
-                C1_temp = self.TC720.get_temp()
-                C2_temp = '-'
-                room_temp = self.TC720.get_temp2()
-
-                #Check if chamber 1 is far off from the target temperature
-                TC720_temperature_error = None
-                if self.target_temperature[0] != None:
-                    if C1_temp > (self.target_temperature[0] + temperature_range) or C1_temp < (self.target_temperature[0] - temperature_range):
-                        TC720_temperature_error = [False, 'Chamber is {}C, and should be at {}C'.format(C1_temp, self.target_temperature[0])]
-                        if verbose:
-                            print('    TC720: {}'.format(TC720_temperature_error))
-
-                #Check room temperature
-                roomtemp_TC720_error = None
-                if room_temp > alarm_room_temperature:
-                    roomtemp_TC720_error = [False, 'CURRENT ROOM TEMPERATURE {}C'.format(room_temp)]
-
-            except Exception as e:
-                TC720_error = [False, 'TC720 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
-            if verbose:
-                print('    TC720: {}'.format(TC720_error))
-
-            return TC720_error, TC720_temperature_error, roomtemp_TC720_error, [room_temp, C1_temp, C2_temp]
-        else:
-            return None, None, None, None
-
-    def check_error(self, alarm_room_temperature=35, temperature_range=5, number_of_messages=10):
-        """
-        Checks errors on all connected machines.
-        Input:
-        `alarm_room_temperature(int): Degree Celsius that is the threshold, 
-            above which the program should send an alarm. Default 35 C.
-        `temperature_range`(int/float): Degrees the actual chamber temperature is
-            allowed to be off from the target temperature. Default 5C.
-        `number_of_messages`(int): Number of messages that are sent every period 
-            that an error is detected. Default to 10. This is a lot but it will 
-            hopefully wake up the user.
-
-        """
-        #Update parameters
-        self.updateExperimentalParameters(self.db_path, ignore_flags=True)
-
-        #Check for errors in all connected machines
-        TC_1_error = self.check_error_TC1()
-        TC_2_error = self.check_error_TC2()
-        roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, t1 = self.check_error_yoctopuce(alarm_room_temperature, temperature_range)
-        TC720_error, TC720_temperature_error, roomtemp_TC720_error, t2 = self.check_error_TC720(alarm_room_temperature, temperature_range)
-
-        #Get the temperature readings of the connected machines
-        if t1 == None:
-            room_temp, C1_temp, C2_temp = t2
-        elif t2 == None:
-            room_temp, C1_temp, C2_temp = t1
-
-        #Gather issues
-        errors = []
-        ##### Add new error codes here if you add machines:
-        for report in [TC_1_error, TC_2_error, roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, TC720_error, TC720_temperature_error, roomtemp_TC720_error]:
-            if report != None:
-                if report[0] == False:
-                    errors.append(report)
-                    self.L.logger.warning('{}'.format(report[1]))
-                            
-        #Warn user by sending a number of messages
-        if errors != []:
-            self.found_error = True
-            for i in range(number_of_messages):
-                self.push(short_message = 'ERROR on {}'.format(self.Parameters['Machine']),
-                            long_message = '\n\nWarning: '.join(er[1] for er in errors if er[0]==False))
-        else:
-            if self.found_error == True:
-                self.L.logger.info('Issue resolved, no errors detected anymore.')
-                self.push(short_message = 'Resolved error',
-                         long_message = '''No errors detected anymore, it resolved itself. Check system if needed, some devices may have been set to idle.\n Current temperatures: Room: {}C, Chamber1: {}C, Chamber2: {}C. Allowed difference: {}C'''.format(room_temp, C1_temp, C2_temp,temperature_range))
-                self.found_error = False
-
-
-    def secure_sleep(self, sec, period=120, alarm_room_temperature=35, temperature_range=5, number_of_messages=10, verbose=False):
-        """
-        Function that sleeps an X amount of time in total but it wakes up every
-        period to check if there are errors reported on one of the machines. It
-        warns the user by sending messages if there is an error. 
-        Input:
-        `sec`(int/float): Number of seconds the program needs to sleep.
-        `period`(int): The length of every cycle. Default 120 seconds.
-        `alarm_room_temperature(int): Degree Celsius that is the threshold, 
-            above which the program should send an alarm. Default 35 C.
-        `temperature_range`(int/float): Degrees the actual chamber temperature is
-            allowed to be off from the target temperature. Default 5C.
-        `number_of_messages`(int): Number of messages that are sent every period 
-            that an error is detected. Default to 10. This is a lot but it will 
-            hopefully wake up the user. 
-        `Verbose`(bool): Prints status and remaining wait time.
-            
-        If you change the system machines you can add and remove machines that 
-        need to be checked by this function. 
-        Adding a machine:
-        1) Add 'new-machine_error' and another None to the line initiating the 
-        variables.
-        2) Add the code that check for the error. It is advised to add a line 
-        that tries to check for errors and an except in case no connection could
-        be made. Then set the 'new-machine_error' to a list of: [bool, "error 
-        message"]. False means an error. The error message will be send to 
-        the user.
-        3) Add the error codes in the last list where they are checked if they 
-        are False and an error needs to be reported to the user.
-        
-        """ 
-        current_temp = ''
-        
-        #Loop through the wait time.
-        while sec > 0:
-            if verbose:
-                print('Secure sleep function: {} seconds remaining'.format(sec))
-            #Just sleep if wait time is less than 30 seconds
-            if sec < 30:
-                if verbose:
-                    print('    Less than 30 seconds to sleep, will return after {} seconds'.format(sec))
-                if sec > 0:
-                    time.sleep(sec)
-                    return
-                else:
-                    return
-
-            #Secure sleep if sleep time is long
-            else:
-                tic = time.time()
-                
-                #Perform error checks on system modules
-                self.check_error(alarm_room_temperature, temperature_range, number_of_messages)
-
-                #Sleep the rest of the ime
-                toc = time.time()
-                execute_time = toc - tic
-                remain_sleep = period - execute_time
-                
-                if remain_sleep>0:
-                    time.sleep(remain_sleep)
-                else:
-                    sec += remain_sleep
-
-                sec -= period
-
 #=============================================================================
 # Function decorator
 #=============================================================================
@@ -1344,7 +939,6 @@ class FISH2():
                 
             return r
         return wrapped
-        
         
 #=============================================================================
 # Fluid handling, Higher level functions
@@ -1542,10 +1136,10 @@ class FISH2():
                 Hybmix_port = Hybmix_port_reverse[Hybmix_code]
                 break
             except KeyError as e:
-                print('{}\nRight Hybridization mix is not connected. Add '.format(e))
+                print('Right Hybridization mix is not connected. Add {} to system. KeyError: {}'.format(Hybmix_code, e))
                 self.push(short_message='Hybmix not connected',
                           long_message= 'Please place Hybmix {} in system and add it to the "Hybmix" table in the datafile'.format(Hybmix_code))
-                input('Press enter if {} is placed and added to the "Hybmix" table in the datafile datafile...'.format(Hybmix_code))
+                input('Press enter if {} is placed and added to the "Hybmix" table in the datafile...'.format(Hybmix_code))
                 self.updateExperimentalParameters(self.db_path, ignore_flags=True)
 
 
@@ -1604,9 +1198,6 @@ class FISH2():
         self.resetReservoir(replace_volume=500)
         self.pump.setSpeed(slow_speed, execute=True)
 
-        #Suck up Hybmix_probes into reservoir, but a little bit less because you can not suck up the full volume
-        #self.extractBuffer(Hybmix_port, (Hybmix_vol-50))
-        print('See if this works!!')
         #Suck up Hybmix_probes into reservoir
         self.extractBuffer(Hybmix_port, Hybmix_vol)
 
@@ -1647,6 +1238,198 @@ class FISH2():
 
         if wash == True:
             self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles)
+
+    def prime(self, port, update=True):
+        """
+        Prime the tubing (and needle) of the buffer, when the system is dry or
+        after a buffer has been replaced.
+        Input:
+        `port`(str): Port to prime
+        `update`(bool): Update the buffer volume. 
+            Select True when priming. Select False when cleaning the tubes.
+
+        """
+        #Prime RunningBuffer
+        if port == 'RunningBuffer':
+            self.resetReservoir(replace_volume=self.pump.syringe_ul)
+            self.resetReservoir(replace_volume=self.pump.syringe_ul)
+            if update == True:
+                self.updateBuffer('RunningBuffer', (2*self.pump.syringe_ul), check=False)
+                self.updateBuffer('Waste', (2*self.pump.syringe_ul), check=False)  
+        #Prime port
+        else:
+            if self.Padding[port] != 'None':
+                self.extractBuffer(port, self.Padding[port])
+                time.sleep(2) #In case of viscous buffers
+                self.resetReservoir(200, update_buffer=True)
+                if update==True:
+                    self.updateBuffer(port, self.Padding[port], check=False)  
+                    self.updateBuffer('Waste', self.Padding[port], check=True)  
+            else:
+                print('Port: {}, can not be primed, no Padding volume is specified.'.format(port))
+
+    def primeSystem(self, system_dry = False):
+        """
+        Primes the ROBOFISH system for operation.
+        Input:
+        `system_dry` (bool): If the tubes are empty and the degasser is empty,
+                        set to True. It will prime the pump and reservoir and
+                        guide you through the priming of the Degassi.
+                        If False it will presume that everything is filled with 
+                        RunningBuffer except for the hyb chambers.
+
+        """
+        self.L.logger.info('Priming system')
+        master = Tk()
+        Label(master, text="Prime buffers:").grid(row=0, sticky=W)
+        print('Select buffers to prime by aspiration (Do not select Waste and output lines like flow cells.)')
+
+        #User input to make a priming selection
+        buttons = {}
+        for i, p in enumerate(self.Ports.keys()):
+            buttons[p] = IntVar()
+            Checkbutton(master, text='Port: {:4}, Buffer {}'.format(p, self.Ports[p]), variable=buttons[p]).grid(row=i+1, sticky=W)
+        mainloop()
+        response = {k: buttons[k].get() for k in buttons.keys()}
+
+        #Prime the EX_pump and reservoir
+        if system_dry == True:
+            print('''\nTo prime the degasser:\n
+            PULL! liquid through the degasser with a syringe. DO NOT PUSH!
+            See manual for detailed instructions. If filled reconnect everything.''')
+            input('Press Enter to when done...')
+            
+            print('Priming pump and reservoir')
+            self.resetReservoir(replace_volume=self.pump.syringe_ul)
+            self.resetReservoir(replace_volume=self.pump.syringe_ul)
+            self.L.logger.info('    Primed degasser, Syringe and reservoir. System_dry = True.')
+            self.updateBuffer('RunningBuffer', (2*self.pump.syringe_ul), check=False)
+            self.updateBuffer('Waste', (2*self.pump.syringe_ul), check=False)  
+            
+        #Prime the buffers selected in the dialog
+        for k, v in response.items():
+            if v == 1:
+                self.prime(k)
+                self.L.logger.info('    Primed port {} connected to buffer {}'.format(k, self.Ports[k]))
+
+        print('''\nPurge the hybridization chambers\n
+        Close the shutoff valve and use the purge valve and a RunningBuffer filled syringe
+        to push out all air bubbles. Open valve afterwards.\n''')
+        input('Press Enter when done and valves are open...')
+            
+        self.L.logger.info('Primed the system, system_dry = {}.'.format(system_dry))
+        
+    def cleanHybmixTube(self, port, cycles=5, wash_volume=200):
+        """
+        Wash the tubbing of the specified port with Running buffer.
+        `port`(str): Port number to wash.
+        `cycles`(int): Number of wash cycles. Default 5.
+        `wash_volume`(int): Extra volume to wash the Eppendorff tube with.
+
+        """
+        target = self.getPort(port)
+        #Remove hybmix remainder from tubes
+        self.connectPort(target)
+        self.pump.extract(volume_ul = self.Padding[target], from_port = 'output', execute=True)
+        self.resetReservoir(replace_volume=300)
+
+        vol = self.Padding[target] + wash_volume #Fills Eppendorf tube with extra running buffer.
+        for c in range(cycles):
+            self.pump.extract(volume_ul = vol, from_port = 'input', execute=True)
+            self.connectPort(target)
+            self.pump.dispense(volume_ul = vol, to_port = 'output', execute=True)
+            self.pump.extract(volume_ul = (vol+500), from_port = 'output', execute=True)
+            self.resetReservoir(replace_volume=500)
+
+        used_vol = 300 + ((vol + 500) * cycles)
+        self.updateBuffer('RunningBuffer', used_vol, check=False)
+        self.updateBuffer('Waste', used_vol, check=True)
+        self.L.logger.info('    Washed port {} {} times with RunningBuffer: {}.'.format(target, cycles, self.Ports['RunningBuffer'])) 
+
+    def cleanSystem(self, wash=True, hybmix_cycles=5, hybmix_wash_volume=200):
+        """
+        Clean the system. First it opens a check box where you can select the tubes,
+        hybridization chambers and Hybmix tubes to clean. It also replaces the reservoir.
+        There are 3 modes of cleaning for different targets:
+        "Aspirate" For buffers that first need to be aspirated. Use all conected buffers.
+        "Dispence" For output lines that are individually connected to the waste.
+            Like a flow cell.
+        "HYBMIX" For connections to a Hybmix eppendorff tube or small volume buffers.
+        Input:
+        `wash`(bool): If True is not only empties the tubes but also washes them
+            twice with RunningBuffer for the aspiration option. Default=True
+        `hybmix_cycles`(int): Specific for washing Hybmix tubes. Number of cyles
+            to wash. Default=5
+        `hybmix_wash_volume`(int): Specific for washing hybmix tubes. Extra volume 
+            to wash the Eppendorff tube with. Default=200
+
+        """
+        self.L.logger.info('Cleaning System.')
+        print('Pull up all the needles so that they are not in contact with the liquids.')
+        input('Press Enter when needles are up...\n\n')
+
+        print('''A pop-up window will appear. Check the boxes of the buffers that need to be cleaned.
+        Tick the "aspirate" box if the buffer needs to be cleaned by first aspirating the remaining buffer and then washing with RunningBuffer.
+        Tick the "dispence" box if the tubes need to be washed by flushing with RunningBuffer, use for Flow cells.
+        Tick the "HYBMIX" box if a hybridization mix is connected and needs to be cleaned.\n''')
+        master = Tk()
+        Label(master, text="Clean:").grid(row=0, sticky=W)
+
+        #User input to make a cleaning selection
+        buttons = {}
+        for i, p in enumerate(self.Ports.keys()):
+            if p != 'RunningBuffer':
+                buttons['Aspirate_{}'.format(p)] = IntVar()
+                Checkbutton(master, text='Port: {:4}, Buffer {:10} ASPIRATE.'.format(p, self.Ports[p]), variable=buttons['Aspirate_{}'.format(p)]).grid(row=i+1, column=1, sticky=W)
+                buttons['Dispence_{}'.format(p)] = IntVar()
+                Checkbutton(master, text='Port: {:4}, Buffer {:10} DISPENSE.'.format(p, self.Ports[p]), variable=buttons['Dispence_{}'.format(p)]).grid(row=i+1, column=2, sticky=W)
+                buttons['HYBMIX_{}'.format(p)] = IntVar()
+                Checkbutton(master, text='Port: {:4}, Buffer {:10} HYBMIX.'.format(p, self.Ports[p]), variable=buttons['HYBMIX_{}'.format(p)]).grid(row=i+1, column=3, sticky=W)
+        mainloop()
+        response = {k: buttons[k].get() for k in buttons.keys()}
+
+        #Clean the ports that need aspiration
+        aspirate_vol = 0
+        for k, v in response.items():
+            if k.startswith('Aspirate') and v == 1:
+                port = k.split('_')[1]
+                self.L.logger.info('    Cleaning port: {} connected to buffer: {}'.format(port, self.Ports[port]))
+                self.prime(port, update=False) #Empties the tube if the needle is not in the liquid.
+                self.prime(port, update=False) #twice to clean completely
+                if wash == True:
+                    self.extractDispenseRunningBuffer(self.Padding[port], port, padding=False)
+                    self.prime(port, update=False)
+                    self.extractDispenseRunningBuffer(self.Padding[port], port, padding=False)
+                    self.prime(port, update=False)
+                    aspirate_vol += self.Padding[port] * 2
+                    self.L.logger.info('    Washed tube and needle twice of port {} with buffer: {}'.format(port, self.Ports[port]))
+
+        #Clean ports that need dispensing
+        dispence_vol = 0
+        for k, v in response.items():
+            if k.startswith('Dispence') and v == 1:
+                port = k.split('_')[1]
+                self.extractDispenseRunningBuffer(1000, port, padding=False)
+                self.extractDispenseRunningBuffer(1000, port, padding=False)
+                self.extractDispenseRunningBuffer(1000, port, padding=False)
+                dispence_vol += 3000
+                self.L.logger.info('    Flushing port {} connected to {} with 3000ul of {}'.format(port, self.Ports[port], self.Ports['RunningBuffer']))
+
+        #Clean the Hybmix ports:
+        for k, v in response.items():
+            if k.startswith('HYBMIX') and v == 1:
+                port = k.split('_')[1]
+                self.cleanHybmixTube(port, cycles=hybmix_cycles, wash_volume=hybmix_wash_volume)
+
+        #Clean the reservoir
+        self.resetReservoir(replace_volume=self.pump.syringe_ul, update_buffer=True)
+        self.resetReservoir(replace_volume=self.pump.syringe_ul, update_buffer=True)
+        self.L.logger.info('    Cleaned reservoir with {}ul of {}'.format(2*self.pump.syringe_ul, self.Ports['RunningBuffer']))
+
+        used_vol = 2*self.pump.syringe_ul + aspirate_vol + dispence_vol
+        self.updateBuffer('RunningBuffer', used_vol, check=True)
+        self.updateBuffer('Waste', used_vol, check=True)
+        self.L.logger.info('System cleaned by user.')  
 
 #=============================================================================
 # Temperature control
@@ -1820,7 +1603,7 @@ class FISH2():
         self.L.logger.info('    {} within range of target temperature {}C, allowed error {}C. Reached in {} seconds after starting the waitTemp() function.'.format(chamber, target_temp, error, counter))
 
 #=============================================================================
-# Trigger imaging by changing a value in a text file. Or wait for it to revert
+# Imaging functions
 #=============================================================================
 
     def waitImaging(self, start_imaging_file_path):
@@ -1883,10 +1666,228 @@ class FISH2():
                     raise Exception('Could not write to: {} and start the imaging. Please check if path and file are correct.'.format(start_imaging_file_path))
 
 #=============================================================================
+# Error checking
+#=============================================================================
+
+    def check_error_TC1(self, verbose=False):
+        'Check errors on ThermoCube1.'
+        if self.Machines['ThermoCube1'] == 1:
+            try:
+                TC_1_error = self.TC_1.check_error(verbose=False, raise_error=False)
+            except Exception as e:
+                TC_1_error = [False, 'TC_1 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
+            if verbose:
+                print('    TC1: {}'.format(TC_1_error))
+            return TC_1_error
+        else:
+            return None
+
+    def check_error_TC2(self, verbose=False):
+        'Check errors on ThermoCube2.'
+        if self.Machines['ThermoCube2'] == 1:
+            try:
+                TC_2_error = self.TC_2.check_error(verbose=False, raise_error=False)
+            except Exception as e:
+                TC_2_error = [False, 'TC_2 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
+            if verbose:
+                print('    TC2: {}'.format(TC_1_error))
+            return TC_2_error
+        else:
+            return None
+
+    def check_error_yoctopuce(self, alarm_room_temperature=35, temperature_range=5, verbose=False):
+        'Check temperatures ycotupuce thermistor.'
+        if self.Machines['YoctoThermistor'] == 1:
+            try:
+                current_temp = self.temp.get_temp()
+                room_temp = current_temp[1]
+                C1_temp = current_temp[2]
+                C2_temp = current_temp[3]
+                if room_temp > alarm_room_temperature:
+                    roomtemp_yocto_error = [False, 'CURRENT ROOM TEMPERATURE {}C'.format(room_temp)]
+                else:
+                    roomtemp_yocto_error = [True, 'CURRENT ROOM TEMPERATURE {}C'.format(room_temp)]
+
+                #Check if chamber 1 is far off from the target temperature
+                C1_temprature_error = None
+                if self.target_temperature[0] != None:
+                    if C1_temp > (self.target_temperature[0] + temperature_range) or C1_temp < (self.target_temperature[0] - temperature_range):
+                        C1_temprature_error = [False, 'Chamber1 is {}C, and should be at {}C'.format(C1_temp, self.target_temperature[0])]
+                        if verbose:
+                            print('    C1: {}'.format(C1_temperature_error))
+
+                #Check if chamber 2 is far off from the target temperature
+                C2_temprature_error = None
+                if self.target_temperature[1] != None:
+                    if C2_temp > (self.target_temperature[1] + temperature_range) or C2_temp < (self.target_temperature[1] - temperature_range):
+                        C2_temprature_error = [False, 'Chamber2 is {}C, and should be at {}C'.format(C2_temp, self.target_temperature[1])]
+                        if verbose:
+                            print('    C2: {}'.format(TC2_temperature_error))
+                        
+            except Exception as e:
+                temperature_error = [False, 'Could not read temperature from Yocto Thermistor, check connection. Error: {}'.format(e)]
+            if verbose:
+                print('    Temperature: {}'.format(temperature_error))
+            
+            return roomtemp_yocto_error, C1_temperature_error, C2_temprature_error, [room_temp, C1_temp, C2_temp]
+        else:
+            return None, None, None, None
+
+    def check_error_TC720(self, alarm_room_temperature=35, temperature_range=5, verbose=False):
+        'Check errors on TC720'
+        if self.Machines['TC720'] == 1:
+            try:
+                #Check for errors
+                TC720_error = self.TC720.check_error(raise_exception=False)
+                #Check temperature readings
+                C1_temp = self.TC720.get_temp()
+                C2_temp = '-'
+                room_temp = self.TC720.get_temp2()
+
+                #Check if chamber 1 is far off from the target temperature
+                TC720_temperature_error = None
+                if self.target_temperature[0] != None:
+                    if C1_temp > (self.target_temperature[0] + temperature_range) or C1_temp < (self.target_temperature[0] - temperature_range):
+                        TC720_temperature_error = [False, 'Chamber is {}C, and should be at {}C'.format(C1_temp, self.target_temperature[0])]
+                        if verbose:
+                            print('    TC720: {}'.format(TC720_temperature_error))
+
+                #Check room temperature
+                roomtemp_TC720_error = None
+                if room_temp > alarm_room_temperature:
+                    roomtemp_TC720_error = [False, 'CURRENT ROOM TEMPERATURE {}C'.format(room_temp)]
+
+            except Exception as e:
+                TC720_error = [False, 'TC720 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
+            if verbose:
+                print('    TC720: {}'.format(TC720_error))
+
+            return TC720_error, TC720_temperature_error, roomtemp_TC720_error, [room_temp, C1_temp, C2_temp]
+        else:
+            return None, None, None, None
+
+    def check_error(self, alarm_room_temperature=35, temperature_range=5, number_of_messages=10):
+        """
+        Checks errors on all connected machines.
+        Input:
+        `alarm_room_temperature(int): Degree Celsius that is the threshold, 
+            above which the program should send an alarm. Default 35 C.
+        `temperature_range`(int/float): Degrees the actual chamber temperature is
+            allowed to be off from the target temperature. Default 5C.
+        `number_of_messages`(int): Number of messages that are sent every period 
+            that an error is detected. Default to 10. This is a lot but it will 
+            hopefully wake up the user.
+
+        """
+        #Update parameters
+        self.updateExperimentalParameters(self.db_path, ignore_flags=True)
+
+        #Check for errors in all connected machines
+        TC_1_error = self.check_error_TC1()
+        TC_2_error = self.check_error_TC2()
+        roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, t1 = self.check_error_yoctopuce(alarm_room_temperature, temperature_range)
+        TC720_error, TC720_temperature_error, roomtemp_TC720_error, t2 = self.check_error_TC720(alarm_room_temperature, temperature_range)
+
+        #Get the temperature readings of the connected machines
+        if t1 == None:
+            room_temp, C1_temp, C2_temp = t2
+        elif t2 == None:
+            room_temp, C1_temp, C2_temp = t1
+
+        #Gather issues
+        errors = []
+        ##### Add new error codes here if you add machines:
+        for report in [TC_1_error, TC_2_error, roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, TC720_error, TC720_temperature_error, roomtemp_TC720_error]:
+            if report != None:
+                if report[0] == False:
+                    errors.append(report)
+                    self.L.logger.warning('{}'.format(report[1]))
+                            
+        #Warn user by sending a number of messages
+        if errors != []:
+            self.found_error = True
+            for i in range(number_of_messages):
+                self.push(short_message = 'ERROR on {}'.format(self.Parameters['Machine']),
+                            long_message = '\n\nWarning: '.join(er[1] for er in errors if er[0]==False))
+        else:
+            if self.found_error == True:
+                self.L.logger.info('Issue resolved, no errors detected anymore.')
+                self.push(short_message = 'Resolved error',
+                         long_message = '''No errors detected anymore, it resolved itself. Check system if needed, some devices may have been set to idle.\n Current temperatures: Room: {}C, Chamber1: {}C, Chamber2: {}C. Allowed difference: {}C'''.format(room_temp, C1_temp, C2_temp,temperature_range))
+                self.found_error = False
+
+    def secure_sleep(self, sec, period=120, alarm_room_temperature=35, temperature_range=5, number_of_messages=10, verbose=False):
+        """
+        Function that sleeps an X amount of time in total but it wakes up every
+        period to check if there are errors reported on one of the machines. It
+        warns the user by sending messages if there is an error. 
+        Input:
+        `sec`(int/float): Number of seconds the program needs to sleep.
+        `period`(int): The length of every cycle. Default 120 seconds.
+        `alarm_room_temperature(int): Degree Celsius that is the threshold, 
+            above which the program should send an alarm. Default 35 C.
+        `temperature_range`(int/float): Degrees the actual chamber temperature is
+            allowed to be off from the target temperature. Default 5C.
+        `number_of_messages`(int): Number of messages that are sent every period 
+            that an error is detected. Default to 10. This is a lot but it will 
+            hopefully wake up the user. 
+        `Verbose`(bool): Prints status and remaining wait time.
+            
+        If you change the system machines you can add and remove machines that 
+        need to be checked by this function. 
+        Adding a machine:
+        1) Add 'new-machine_error' and another None to the line initiating the 
+        variables.
+        2) Add the code that check for the error. It is advised to add a line 
+        that tries to check for errors and an except in case no connection could
+        be made. Then set the 'new-machine_error' to a list of: [bool, "error 
+        message"]. False means an error. The error message will be send to 
+        the user.
+        3) Add the error codes in the last list where they are checked if they 
+        are False and an error needs to be reported to the user.
+        
+        """ 
+        current_temp = ''
+        
+        #Loop through the wait time.
+        while sec > 0:
+            if verbose:
+                print('Secure sleep function: {} seconds remaining'.format(sec))
+            #Just sleep if wait time is less than 30 seconds
+            if sec < 30:
+                if verbose:
+                    print('    Less than 30 seconds to sleep, will return after {} seconds'.format(sec))
+                if sec > 0:
+                    time.sleep(sec)
+                    return
+                else:
+                    return
+
+            #Secure sleep if sleep time is long
+            else:
+                tic = time.time()
+                
+                #Perform error checks on system modules
+                self.check_error(alarm_room_temperature, temperature_range, number_of_messages)
+
+                #Sleep the rest of the ime
+                toc = time.time()
+                execute_time = toc - tic
+                remain_sleep = period - execute_time
+                
+                if remain_sleep>0:
+                    time.sleep(remain_sleep)
+                else:
+                    sec += remain_sleep
+
+                sec -= period
+
+#=============================================================================
 # Scheduler to perform an experiment
 #=============================================================================
 
-    def scheduler(self, function1, function2, remove_experiment=True, current_1=None, current_2=None, start_with=None ):
+    def scheduler(self, function1, function2, remove_experiment=True, log_info_file=True,
+                  current_1=None, current_2=None, start_with=None ):
         """
         Scheduler that schedules and performs the experiments on the ROBOFISH
         system depending on the info provided in the info file. The experiment
@@ -1902,11 +1903,15 @@ class FISH2():
         `function1`(function): Function for the FIRST part of the experiment.
             Usually the first round of the experiment is different because no
             stripping needs to be performed or there are other differences. 
-            Pass the full function here with arguments and the scheduler
-            will perform it.
+            The function should take the following input: 
+            chamber(str) = 'Chamber1' or 'Chamber2'
+            cycle(int) = Cycle number
         `fucntion2`(function): Function for the REPEAT part of the experiment.
             The repeat part is the part of the experiment that keeps cycling
             untill all rounds are performed.
+            The function should take the following input: 
+            chamber(str) = 'Chamber1' or 'Chamber2'
+            cycle(int) = Cycle number
         `remove_experiment`(bool): If you are running only one experiment 
             at a time and want to re-use the data in the info file, set 
             to False and the scheduler will not remove all data when the 
@@ -1914,6 +1919,7 @@ class FISH2():
             ONLY USE WHEN RUNNING ONLY ONE EXPERIMENT WITH ONE CHAMBER!!
             Practical when experiments are standardized and only one
             experiment is run at a time.
+        `log_info_file`(bool): If true it logs all info in the info file. 
 
         Restart functionalities:
         Use these parameters when you had to restart the scheduler.
@@ -1988,6 +1994,7 @@ class FISH2():
                 'Staining_temperature': self.Parameters['Staining_temperature'],
                 'Start_date': self.Parameters['Start_date_{}'.format(cur_stain)],
                 'Target_cycles': self.Parameters['Target_cycles_{}'.format(cur_stain)],
+                'Species': self.Parameters['Species_{}'.format(cur_stain)],
                 'Sample': self.Parameters['Sample_{}'.format(cur_stain)],
                 'Strain': self.Parameters['Strain_{}'.format(cur_stain)],
                 'Age': self.Parameters['Age_{}'.format(cur_stain)],
@@ -2004,7 +2011,7 @@ class FISH2():
                 info_dict['temperature_log'] = self.temp.temp_log_filename
 
             if log == True:
-                self.L.logger.info( 'Cycle parameters:\n'+''.join(['{}: {}\n'.format(i, info_dict[i]) for i in info_dict]))
+                self.L.logger.info('\nCycle parameters:\n'+''.join(['{}: {}\n'.format(i, info_dict[i]) for i in info_dict]))
 
             info_file_name = 'TEMPORARY_{}_{}'.format( cur_exp['EXP_number_{}'.format(cur_stain)], round_code)
             pickle.dump(info_dict, open('{}\\{}.pkl'.format(self.imaging_output_folder, info_file_name), 'wb'))
@@ -2073,7 +2080,6 @@ class FISH2():
 
         # Infinite cycle to perform all experiments. Can be left on for multiple experiments.
         while True:
-            print(cur_exp)
 
         #Pause or exit if there are no experiments to perform
             updateCurExp()
@@ -2136,7 +2142,7 @@ class FISH2():
                     #Perform First Part of experiment
                     function1('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)])
                     #Write info file for this round
-                    create_info_dict(cur_exp, cur_stain, log=False)
+                    create_info_dict(cur_exp, cur_stain, log=log_info_file)
         
                 #No, old experiment:
                 else:
@@ -2158,7 +2164,7 @@ class FISH2():
                     #Perform Repeat Part of experiment
                     function2('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)])
                     #Write info file for this round
-                    create_info_dict(cur_exp, cur_stain, log=False)
+                    create_info_dict(cur_exp, cur_stain, log=log_info_file)
         
                 #Wrappup Current_stain? If all stainings are done, but the last imaging has still to be performed.
                 #Yes, wrapup:
@@ -2169,6 +2175,8 @@ class FISH2():
                     self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
                     #Logging
                     self.L.logger.info('FINISHED {}, Removing from database and FISH_System_datafile.yalm'.format(cur_exp['EXP_number_{}'.format(cur_stain)]))
+                    #Log the targets
+                    self.L.logger.info('Targets:\n'+''.join('{}\n'.format(i) for i in self.Targets))
                     wrappup = True
                     if remove_experiment == True:    
                         #Notify user
