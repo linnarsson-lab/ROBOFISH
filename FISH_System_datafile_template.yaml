@@ -18,23 +18,35 @@ FISHSystem:
         #   Second Hybridization time in hours (amplifier probes)
         Hyb_time_1_B: 
         #   Third Hybridization time in hours (detection probes)
-        Hyb_time_1_C: 
+        Hyb_time_1_C:
+        #   Name of the detection chemisty, like: EELV2_core, EELV2_all, indirect_64
+        Chemistry_1: 
         #   Total number of rounds
         Target_cycles_1: 
+        #   True or False if a barcode is used
+        Barcode_1:
+        #   Name of the codebook
+        Codebook_1:
+        #   Number of bits in the barcode
+        Barcode_length_1:
         #   Species:
         Species_1:
+        #   Strain of the animal
+        Strain_1:
         #   Sample identification number
         Sample_1:
-        #   Strain of animal
-        Strain_1:
         #   Age of sample. Use letter indication for age system. Like: e for embryonic or ga for gestational age
         Age_1:
         #   Tissue
         Tissue_1:
+        #   Section orrientation
+        Orrientation_1:
         #   Region imaged
         RegionImaged_1:
         #   Section ID
         SectionID_1:
+        #   Coordinates of the section. (use appropriate coordinate system for species)
+        Position_1:
         #   Channel to be used for stitching
         StitchingChannel_1:
         #   Overlap percentage between fields of view
@@ -45,31 +57,43 @@ FISHSystem:
         #   Experiment number: Initials with date, like: LBEXP20181220-2
         EXP_number_2: 
         #   YYYY-MM-DD HH:MM
-        Start_date_2:
+        Start_date_2: 
         #   Chamber1 or Chamber2
         Chamber_EXP_2: 
         #   First Hybridization time in hours (encoding probes)
-        Hyb_time_2_A: 4
+        Hyb_time_2_A: 
         #   Second Hybridization time in hours (amplifier probes)
-        Hyb_time_2_B: 2
+        Hyb_time_2_B: 
         #   Third Hybridization time in hours (detection probes)
-        Hyb_time_2_C: 2
+        Hyb_time_2_C:
+        #   Name of the detection chemisty, like: EELV2_core, EELV2_all, indirect_64
+        Chemistry_2: 
         #   Total number of rounds
         Target_cycles_2: 
+        #   True or False if a barcode is used
+        Barcode_2:
+        #   Name of the codebook
+        Codebook_2:
+        #   Number of bits in the barcode
+        Barcode_length_2:
         #   Species:
         Species_2:
+        #   Strain of the animal
+        Strain_2:
         #   Sample identification number
         Sample_2:
-        #   Strain of animal
-        Strain_2:
         #   Age of sample. Use letter indication for age system. Like: e for embryonic or ga for gestational age
         Age_2:
         #   Tissue
         Tissue_2:
+        #   Section orrientation
+        Orrientation_2:
         #   Region imaged
         RegionImaged_2:
         #   Section ID
         SectionID_2:
+        #   Coordinates of the section. (use appropriate coordinate system for species)
+        Position_2:
         #   Channel to be used for stitching
         StitchingChannel_2:
         #   Overlap percentage between fields of view
