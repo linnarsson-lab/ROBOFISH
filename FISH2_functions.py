@@ -1999,8 +1999,14 @@ class FISH2():
                 'Strain': self.Parameters['Strain_{}'.format(cur_stain)],
                 'Age': self.Parameters['Age_{}'.format(cur_stain)],
                 'Tissue': self.Parameters['Tissue_{}'.format(cur_stain)],
+                'Orrientation': self.Parameters['Orrientation_{}'.format(cur_stain)],
                 'RegionImaged': self.Parameters['RegionImaged_{}'.format(cur_stain)],
                 'SectionID': self.Parameters['SectionID_{}'.format(cur_stain)],
+                'Position': self.Parameters['Position_{}'.format(cur_stain)],
+                'Chemistry': self.Parameters['Chemistry_{}'.format(cur_stain)],
+                'Barcode': self.Parameters['Barcode_{}'.format(cur_stain)],
+                'Barcode_length': self.Parameters['Barcode_length_{}'.format(cur_stain)],
+                'Codebook': self.Parameters['Codebook_{}'.format(cur_stain)],
                 'StitchingChannel': self.Parameters['StitchingChannel_{}'.format(cur_stain)],
                 'Overlapping_percentage': self.Parameters['Overlapping_percentage_{}'.format(cur_stain)],
                 'channels': target_dict,
@@ -2026,7 +2032,23 @@ class FISH2():
             for k in cur_exp:
                 if k in self.Parameters:
                     cur_exp[k] = self.Parameters[k]
-    
+        
+        def create_config_file(cur_stain, other):
+            """
+            Make experiment configuration file.
+            Input:
+            `cur_stain`(int): Number of the chamber currently staining.
+            `other`(int): Number of the other chamber
+
+            """
+            fname = '{}/{}_config.yaml'.format(self.imaging_output_folder, cur_exp['EXP_number_{}'.format(cur_stain)])
+            params = perif.getFISHSystemMetadata('FISH_System_datafile.yaml', table='Parameters')
+            #Select only current experiment.
+            params = {k:i  for k,i in self.Parameters.items() if not '_{}'.format(other) in k}
+            #Dump params in new .yaml file.
+            perif.yamlMake(fname, params)
+            self.L.logger.info('Experiment configuration file created: {}'.format(fname))
+
         #######################################################
         # Scheduler
         #######################################################
@@ -2136,6 +2158,9 @@ class FISH2():
                     #Logging
                     self.L.logger.info('_____')
                     self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                    #Make config file
+                    create_config_file(cur_stain, other)
+                    #Record start time
                     timing['tic_{}'.format(cur_stain)] = datetime.now()
                     print('')
                     #################################################################
@@ -2154,7 +2179,8 @@ class FISH2():
                     #Calculate total experiment time
                     if timing['tic_{}'.format(cur_stain)] != None:
                         round_time = datetime.now() - timing['tic_{}'.format(cur_stain)]
-                        rounds_left = cur_exp['Target_cycles_{}'.format(cur_stain)] - cur_exp['Current_cycle_{}'.format(cur_stain)]
+                        #Rounds left including current round. 
+                        rounds_left = cur_exp['Target_cycles_{}'.format(cur_stain)] - (cur_exp['Current_cycle_{}'.format(cur_stain)] -1)
                         finish_time = datetime.now() + (rounds_left * timedelta(days=round_time.days, seconds=round_time.seconds))
                         print('Expected finish time of cycle {} in Chamber{}: {}'.format(cur_exp['Current_cycle_{}'.format(cur_stain)], cur_stain, datetime.now()+round_time))
                         print('Expected finish time for full experiment in Chamber{}: {}'.format(cur_stain, finish_time))

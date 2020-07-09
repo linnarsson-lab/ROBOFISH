@@ -164,6 +164,17 @@ def get_push(pushbullet_address_book, operator = 'lars', limit=1):
 # Managing .yaml files    
 #=============================================================================
 
+def yamlMake(filepath, new={}):
+    """
+    Make a .yaml file and dump a dictionary.
+    Input:
+    `filepath`(str): Full filepath with file name.
+    `new`(dict): New dictionary to dump to the file
+
+    """
+    with open(filepath, 'w') as new_yaml_file:
+        ruamel.yaml.dump(new, new_yaml_file, default_flow_style=False)
+
 def yamlLoader(filepath):
     """
     Loads .yaml datafile into python dictionaries. (without comments)
@@ -364,14 +375,20 @@ def newFISHdb(db_name):
                             Hyb_time_1_A REAL,
                             Hyb_time_1_B REAL,
                             Hyb_time_1_C REAL,
+                            Chemistry_1 TEXT,
                             Target_cycles_1 INTEGER,
+                            Barcode_1 TEXT,
+                            Codebook_1 TEXT,
+                            Barcode_length_1 INT,
                             Species_1 TEXT,
-                            Sample_1 TEXT,
                             Strain_1 TEXT,
+                            Sample_1 TEXT,
                             Age_1 TEXT,
                             Tissue_1 TEXT,
+                            Orrientation_1 TEXT,
                             RegionImaged_1 TEXT,
                             SectionID_1 TEXT,
+                            Position_1 TEXT,
                             StitchingChannel_1 TEXT,
                             Overlapping_percentage_1 TEXT,
                             roi_1 TEXT,
@@ -381,14 +398,20 @@ def newFISHdb(db_name):
                             Hyb_time_2_A REAL,
                             Hyb_time_2_B REAL,
                             Hyb_time_2_C REAL,
+                            Chemistry_2 TEXT,
                             Target_cycles_2 INTEGER,
+                            Barcode_2 TEXT,
+                            Codebook_2 TEXT,
+                            Barcode_length_2 INT,
                             Species_2 TEXT,
-                            Sample_2 TEXT,
                             Strain_2 TEXT,
+                            Sample_2 TEXT,
                             Age_2 TEXT,
                             Tissue_2 TEXT,
+                            Orrientation_2 TEXT,
                             RegionImaged_2 TEXT,
                             SectionID_2 TEXT,
+                            Position_2 TEXT,
                             StitchingChannel_2 TEXT,
                             Overlapping_percentage_2 TEXT,
                             roi_2 TEXT,
@@ -1010,7 +1033,7 @@ def yamlToDB_All(db_path):
     Working data file: 'FISH_System_datafile.yaml'
     
     """    
-    # Update all 7 tables (Excluding flags)
+    # Update all tables (Excluding flags)
     yamlToDB_Parameters(db_path, to_update='All')
     yamlToDB_Volumes(db_path)
     yamlToDB_Targets(db_path)
@@ -1284,7 +1307,7 @@ def countdown(seconds):
         n = seconds
         while n > -1:
             counter = '< {} > seconds'.format(n)
-            counter = '\r'+counter
+            counter = '\r'+ counter
             print(counter, end='')
             yield n
             n-=1
@@ -1401,6 +1424,3 @@ def removeHybmix(db_path, HYB_port):
     yamlToDB_Hybmix(db_path)
     
     print('Notepad++.exe can be used again')
-
-
-   
