@@ -100,7 +100,7 @@ To match this round info file with a certain image, the Imaging job renames the 
 - Under Advanced click on `Environment variables...` a new window will appear.
 - Double click on the `Path` variable under your user name and a new window will appear.
 - Click New and add the copied path like: `C:\<User path to anaconda>\Anaconda3`.
-- Again add a new but now append `\Scripts\` to the coppied path like: `C:\<User path to anaconda>\Anaconda3\Scripts`.
+- Again add a new but now append `\Scripts` to the coppied path like: `C:\<User path to anaconda>\Anaconda3\Scripts`.
 - Click Ok on all windows.
 - To test if it worked, open a new Windows Command Prompt and type `python`. You should now see the python interpreter. 
 
