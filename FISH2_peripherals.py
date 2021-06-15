@@ -54,8 +54,7 @@ class FISH_logger():
     """Logger for FISH System 2"""
     
     def __init__(self, verbose = True, folder_name = 'log_files', system_name =
-                'ROBOFISH', log_level = logging.INFO, console_level = 
-                logging.INFO):
+                'ROBOFISH', log_level = logging.INFO, console_level = logging.INFO):
         """
         Input:
         `verbose`(bool): If True, prints that is made the logger.
@@ -87,7 +86,7 @@ class FISH_logger():
         if not os.path.exists(log_path):
             os.makedirs(log_path)
 
-        dateTag = time.strftime("%Y-%m-%d %H-%M-%S")
+        dateTag = time.strftime("%Y-%b-%d_%H-%M-%S")
         self.logger_path = '{}/{}_{}.log'.format(log_path, dateTag, system_name)
         self.fh = logging.FileHandler(self.logger_path, mode = 'w')
         if verbose == True:
@@ -98,7 +97,7 @@ class FISH_logger():
         self.fh.setFormatter(formatter_file)
         self.logger.addHandler(self.fh)
 
-        # To print the logging to console
+        # Print logging to console
         ch = logging.StreamHandler()
         ch.setLevel(console_level)
         ch.setFormatter(formatter_con)
@@ -369,17 +368,28 @@ def newFISHdb(db_name):
             cursor.execute("""CREATE TABLE Parameters
                             (Operator TEXT,
                             Machine TEXT,
-                            EXP_number_1 TEXT,
+                            EXP_name_1 TEXT,
+                            Description_1 TEXT,
+                            Protocols_io_1 TEXT,
                             Start_date_1 TEXT,
                             Chamber_EXP_1 TEXT,
                             Hyb_time_1_A REAL,
                             Hyb_time_1_B REAL,
                             Hyb_time_1_C REAL,
-                            Chemistry_1 TEXT,
+                            Experiment_type_1 TEXT,
                             Target_cycles_1 INTEGER,
                             Barcode_1 TEXT,
-                            Codebook_1 TEXT,
-                            Barcode_length_1 INT,
+                            Chemistry_1 TEXT,
+                            Probe_FASTA_name_1 TEXT,
+                            Codebook_DAPI_1 TEXT,
+                            Codebook_Atto425_1 TEXT,
+                            Codebook_FITC_1 TEXT,
+                            Codebook_Cy3_1 TEXT,
+                            Codebook_TxRed_1 TEXT,
+                            Codebook_Cy5_1 TEXT,
+                            Codebook_Cy7_1 TEXT,
+                            Multicolor_barcode_1 TEXT,
+                            Barcode_length_1 INTEGER,
                             Species_1 TEXT,
                             Strain_1 TEXT,
                             Sample_1 TEXT,
@@ -389,20 +399,33 @@ def newFISHdb(db_name):
                             RegionImaged_1 TEXT,
                             SectionID_1 TEXT,
                             Position_1 TEXT,
+                            Stitching_type_1 TEXT,
                             StitchingChannel_1 TEXT,
                             Overlapping_percentage_1 TEXT,
                             roi_1 TEXT,
-                            EXP_number_2 TEXT,
+                            Pipeline_1 TEXT,
+                            EXP_name_2 TEXT,
+                            Description_2 TEXT,
+                            Protocols_io_2 TEXT,
                             Start_date_2 TEXT,
                             Chamber_EXP_2 TEXT,
                             Hyb_time_2_A REAL,
                             Hyb_time_2_B REAL,
                             Hyb_time_2_C REAL,
-                            Chemistry_2 TEXT,
+                            Experiment_type_2 TEXT,
                             Target_cycles_2 INTEGER,
                             Barcode_2 TEXT,
-                            Codebook_2 TEXT,
-                            Barcode_length_2 INT,
+                            Chemistry_2 TEXT,
+                            Probe_FASTA_name_2 TEXT,
+                            Codebook_DAPI_2 TEXT,
+                            Codebook_Atto425_2 TEXT,
+                            Codebook_FITC_2 TEXT,
+                            Codebook_Cy3_2 TEXT,
+                            Codebook_TxRed_2 TEXT,
+                            Codebook_Cy5_2 TEXT,
+                            Codebook_Cy7_2 TEXT,
+                            Multicolor_barcode_2 TEXT,
+                            Barcode_length_2 INTEGER,
                             Species_2 TEXT,
                             Strain_2 TEXT,
                             Sample_2 TEXT,
@@ -412,9 +435,11 @@ def newFISHdb(db_name):
                             RegionImaged_2 TEXT,
                             SectionID_2 TEXT,
                             Position_2 TEXT,
+                            Stitching_type_2 TEXT,
                             StitchingChannel_2 TEXT,
                             Overlapping_percentage_2 TEXT,
                             roi_2 TEXT,
+                            Pipeline_2 TEXT,
                             Program TEXT,
                             Hybmix_volume INTEGER,
                             Staining_temperature REAL,
@@ -615,7 +640,8 @@ def newFISHdb(db_name):
                             P17 REAL,
                             P18 REAL,
                             P19 REAL,
-                            P20 REAL)""")
+                            P20 REAL,
+                            Disk REAL)""")
             cursor.execute("INSERT INTO Alert_volume DEFAULT VALUES")
             print('New database created.')
         

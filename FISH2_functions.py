@@ -32,6 +32,7 @@ import numpy as np
 from functools import wraps
 from tkinter import *
 import pickle
+import shutil
 
 # FISH peripherals
 import FISH2_peripherals as perif
@@ -325,7 +326,7 @@ class FISH2():
                     direction='Z',
                     microstep=False, 
                     slope=14, 
-                    speed=20,
+                    speed=22,
                     debug=False, 
                     debug_log_path='.')
             self.L.logger.info('    Established connection with CavroXCalibur.')
@@ -969,9 +970,8 @@ class FISH2():
                 The target volume and padding can not be more than: {}ul.\n
                 Volume to pipette: {}ul {}'''.format(max_volume, volume, padding_error)))
                 
-        #Discard 50ul of target buffer to make sure it is clean and without air bubbles.
-        self.extractBuffer(target, 50)
-        self.dispenseBuffer('Waste', 50)
+        #Discard 50ul of Running buffer to make sure it is clean and without air bubbles.
+        self.resetReservoir(replace_volume = 50)
         #Extract
         self.pump.extract(volume_ul=volume, from_port='input', execute=True)
         if padding == True:
@@ -1726,12 +1726,15 @@ class FISH2():
                         
             except Exception as e:
                 temperature_error = [False, 'Could not read temperature from Yocto Thermistor, check connection. Error: {}'.format(e)]
+                C1_temperature_error = None
+                C2_temprature_error = None
+                room_temp, C1_temp, C2_temp = None, None, None
             if verbose:
                 print('    Temperature: {}'.format(temperature_error))
             
             return roomtemp_yocto_error, C1_temperature_error, C2_temprature_error, [room_temp, C1_temp, C2_temp]
         else:
-            return None, None, None, None
+            return None, None, None, [None, None, None]
 
     def check_error_TC720(self, alarm_room_temperature=35, temperature_range=5, verbose=False):
         'Check errors on TC720'
@@ -1759,12 +1762,27 @@ class FISH2():
 
             except Exception as e:
                 TC720_error = [False, 'TC720 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
+                TC720_temperature_error = None
+                roomtemp_TC720_error = None
+                room_temp, C1_temp, C2_temp = None, None, None
             if verbose:
                 print('    TC720: {}'.format(TC720_error))
 
             return TC720_error, TC720_temperature_error, roomtemp_TC720_error, [room_temp, C1_temp, C2_temp]
         else:
-            return None, None, None, None
+            return None, None, None, [None, None, None]
+
+    def check_error_disk(self):
+        """
+        Check disk usage to warn user if it is too high.
+
+        """
+        drive = self.imaging_output_folder[:2] #Only on windows??
+        total, used, free = shutil.disk_usage(drive)
+        if (used / total) > self.Alert_volume['Disk']:
+            return [False, f'Disk usage high: {used // (2**30)}GB used, {free // (2**30)}GB free, of total {total // (2**30)}GB']
+        else:
+            return [True, f'Disk usage: {used // (2**30)}GB used, {free // (2**30)}GB free, of total {total // (2**30)}GB']
 
     def check_error(self, alarm_room_temperature=35, temperature_range=5, number_of_messages=10):
         """
@@ -1787,17 +1805,19 @@ class FISH2():
         TC_2_error = self.check_error_TC2()
         roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, t1 = self.check_error_yoctopuce(alarm_room_temperature, temperature_range)
         TC720_error, TC720_temperature_error, roomtemp_TC720_error, t2 = self.check_error_TC720(alarm_room_temperature, temperature_range)
+        disk_error = self.check_error_disk()
 
         #Get the temperature readings of the connected machines
-        if t1 == None:
+        if t1 == [None, None, None]:
             room_temp, C1_temp, C2_temp = t2
-        elif t2 == None:
+        elif t2 == [None, None, None]:
             room_temp, C1_temp, C2_temp = t1
 
         #Gather issues
         errors = []
         ##### Add new error codes here if you add machines:
-        for report in [TC_1_error, TC_2_error, roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, TC720_error, TC720_temperature_error, roomtemp_TC720_error]:
+        for report in [TC_1_error, TC_2_error, roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, 
+                       TC720_error, TC720_temperature_error, roomtemp_TC720_error, disk_error]:
             if report != None:
                 if report[0] == False:
                     errors.append(report)
@@ -1977,11 +1997,13 @@ class FISH2():
             #Get the parameters of this experiment
             info_dict = {
                 'round_code' : round_code,
-                'experiment_name': cur_exp['EXP_number_{}'.format(cur_stain)],
+                'experiment_name': cur_exp['EXP_name_{}'.format(cur_stain)],
+                'Description': self.Parameters['Description_{}'.format(cur_stain)],
+                'Protocols_io': self.Parameters['Protocols_io_{}'.format(cur_stain)],
                 'chamber': 'chamber{}'.format(cur_stain),
-                'machine': self.Parameters['Machine'],
-                'operator': self.Parameters['Operator'],
-                'timestamp_robofish': time.strftime("%Y-%m-%d %H-%M-%S"),
+                'Machine': self.Parameters['Machine'],
+                'Operator': self.Parameters['Operator'],
+                'Timestamp_robofish': time.strftime("%Y-%m-%d %H-%M-%S"),
                 'hybridization_fname': 'Unknown-at-dict-generation-time',
                 'hybridization_number': int(cur_exp['Current_cycle_{}'.format(cur_stain)]),
                 'Hyb_time_A': self.Parameters['Hyb_time_{}_A'.format(cur_stain)],
@@ -2003,14 +2025,25 @@ class FISH2():
                 'RegionImaged': self.Parameters['RegionImaged_{}'.format(cur_stain)],
                 'SectionID': self.Parameters['SectionID_{}'.format(cur_stain)],
                 'Position': self.Parameters['Position_{}'.format(cur_stain)],
+                'Experiment_type': self.Parameters['Experiment_type_{}'.format(cur_stain)],
                 'Chemistry': self.Parameters['Chemistry_{}'.format(cur_stain)],
+                'Probe_FASTA_name': self.Parameters['Probe_FASTA_name_{}'.format(cur_stain)],
                 'Barcode': self.Parameters['Barcode_{}'.format(cur_stain)],
                 'Barcode_length': self.Parameters['Barcode_length_{}'.format(cur_stain)],
-                'Codebook': self.Parameters['Codebook_{}'.format(cur_stain)],
+                'Codebook_DAPI': self.Parameters['Codebook_DAPI_{}'.format(cur_stain)],
+                'Codebook_Atto425': self.Parameters['Codebook_Atto425_{}'.format(cur_stain)],
+                'Codebook_FITC': self.Parameters['Codebook_FITC_{}'.format(cur_stain)],
+                'Codebook_Cy3': self.Parameters['Codebook_Cy3_{}'.format(cur_stain)],
+                'Codebook_TxRed': self.Parameters['Codebook_TxRed_{}'.format(cur_stain)],
+                'Codebook_Cy5': self.Parameters['Codebook_Cy5_{}'.format(cur_stain)],
+                'Codebook_Cy7': self.Parameters['Codebook_Cy7_{}'.format(cur_stain)],
+                'Multicolor_barcode': self.Parameters['Multicolor_barcode_{}'.format(cur_stain)],
+                'Stitching_type': self.Parameters['Stitching_type_{}'.format(cur_stain)],
                 'StitchingChannel': self.Parameters['StitchingChannel_{}'.format(cur_stain)],
                 'Overlapping_percentage': self.Parameters['Overlapping_percentage_{}'.format(cur_stain)],
                 'channels': target_dict,
                 'roi': self.Parameters['roi_{}'.format(cur_stain)],
+                'Pipeline': self.Parameters['Pipeline_{}'.format(cur_stain)],
                 'system_log': self.L.logger_path
                 }
             if self.Machines['YoctoThermistor'] == 1:
@@ -2019,7 +2052,7 @@ class FISH2():
             if log == True:
                 self.L.logger.info('\nCycle parameters:\n'+''.join(['{}: {}\n'.format(i, info_dict[i]) for i in info_dict]))
 
-            info_file_name = 'TEMPORARY_{}_{}'.format( cur_exp['EXP_number_{}'.format(cur_stain)], round_code)
+            info_file_name = 'TEMPORARY_{}_{}'.format( cur_exp['EXP_name_{}'.format(cur_stain)], round_code)
             pickle.dump(info_dict, open('{}\\{}.pkl'.format(self.imaging_output_folder, info_file_name), 'wb'))
 
         def updateCurExp():
@@ -2041,10 +2074,18 @@ class FISH2():
             `other`(int): Number of the other chamber
 
             """
-            fname = '{}/{}_config.yaml'.format(self.imaging_output_folder, cur_exp['EXP_number_{}'.format(cur_stain)])
+            fname = '{}/{}_config.yaml'.format(self.imaging_output_folder, cur_exp['EXP_name_{}'.format(cur_stain)])
             params = perif.getFISHSystemMetadata('FISH_System_datafile.yaml', table='Parameters')
             #Select only current experiment.
-            params = {k:i  for k,i in self.Parameters.items() if not '_{}'.format(other) in k}
+            params = {}
+            for k,i in self.Parameters.items():
+                if k.endswith('_{}'.format(cur_stain)):
+                    k_short = k[:-2]
+                    params[k_short] = i
+                #Parameters without camber specific ending
+                if not k.endswith('_{}'.format(other)) and not k.endswith('_{}'.format(cur_stain)):
+                    params[k] = i
+
             #Dump params in new .yaml file.
             perif.yamlMake(fname, params)
             self.L.logger.info('Experiment configuration file created: {}'.format(fname))
@@ -2055,8 +2096,8 @@ class FISH2():
 
         #Information on the current state of the experiment
         cur_exp = {
-            'EXP_number_1': 'None',
-            'EXP_number_2': 'None',
+            'EXP_name_1': 'None',
+            'EXP_name_2': 'None',
             'Location_EXP_1': 'None',
             'Location_EXP_2': 'None',
             'Target_cycles_1': 'None',
@@ -2073,11 +2114,11 @@ class FISH2():
             'tic_2': None}
 
         #check exp number to see if there are one or two experiments to run.
-        if cur_exp['EXP_number_1'] != 'None' and cur_exp['EXP_number_2'] != 'None':
+        if cur_exp['EXP_name_1'] != 'None' and cur_exp['EXP_name_2'] != 'None':
             cur_exp['Current_staining'] = 1
-        elif cur_exp['EXP_number_1'] != 'None':
+        elif cur_exp['EXP_name_1'] != 'None':
             cur_exp['Current_staining'] = 1
-        elif cur_exp['EXP_number_2'] != 'None':
+        elif cur_exp['EXP_name_2'] != 'None':
             cur_exp['Current_staining'] = 2
         self.L.logger.info('Start new experiment, start with chamber {}.'.format(cur_exp['Current_staining']))    
 
@@ -2105,7 +2146,7 @@ class FISH2():
 
         #Pause or exit if there are no experiments to perform
             updateCurExp()
-            if cur_exp['EXP_number_1'] == 'None' and cur_exp['EXP_number_2'] == 'None':
+            if cur_exp['EXP_name_1'] == 'None' and cur_exp['EXP_name_2'] == 'None':
                 print('No experiments detected to perform.')
                 print('You can resume after preparing a new experiment or stop the program.')
                 while True:
@@ -2119,11 +2160,11 @@ class FISH2():
                     input('\nPress Enter when ready to resume staining and imaging...')
                     updateCurExp()
                     #check exp number to see if there are one or two experiments to run.
-                    if cur_exp['EXP_number_1'] != 'None' and cur_exp['EXP_number_2'] != 'None':
+                    if cur_exp['EXP_name_1'] != 'None' and cur_exp['EXP_name_2'] != 'None':
                         cur_exp['Current_staining'] = 1
-                    elif cur_exp['EXP_number_1'] != 'None':
+                    elif cur_exp['EXP_name_1'] != 'None':
                         cur_exp['Current_staining'] = 1
-                    elif cur_exp['EXP_number_2'] != 'None':
+                    elif cur_exp['EXP_name_2'] != 'None':
                         cur_exp['Current_staining'] = 2
                     self.L.logger.info('Start new experiment, start with chamber {}.'.format(cur_exp['Current_staining']))    
 
@@ -2137,12 +2178,12 @@ class FISH2():
         #Does Current_stain exist:
             updateCurExp()
             #No, Current_stain does not exist, Only Other is being stained and imaged:
-            if cur_exp['EXP_number_{}'.format(cur_stain)] == 'None':
+            if cur_exp['EXP_name_{}'.format(cur_stain)] == 'None':
                 self.L.logger.info('No new experiment detected in Chamber{}, waiting untill imaging of Chamber{} is finished'.format(cur_stain, other))
                 print('')
                 #Wait untill Other is finished with imaging
                 self.waitImaging(self.start_imaging_file_path)
-                self.L.logger.info('Imaging Experiment: {} Cycle: {} done.\n'.format(cur_exp['EXP_number_{}'.format(other)], cur_exp['Current_cycle_{}'.format(other)]))
+                self.L.logger.info('Imaging Experiment: {} Cycle: {} done.\n'.format(cur_exp['EXP_name_{}'.format(other)], cur_exp['Current_cycle_{}'.format(other)]))
                 print('')
                 #FLIP
                 cur_exp['Current_staining'] = other
@@ -2157,7 +2198,7 @@ class FISH2():
                     cur_exp['Current_cycle_{}'.format(cur_stain)] = 1
                     #Logging
                     self.L.logger.info('_____')
-                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     #Make config file
                     create_config_file(cur_stain, other)
                     #Record start time
@@ -2175,7 +2216,7 @@ class FISH2():
                     #Logging
                     self.L.logger.info(' ')
                     self.L.logger.info('_____')
-                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     #Calculate total experiment time
                     if timing['tic_{}'.format(cur_stain)] != None:
                         round_time = datetime.now() - timing['tic_{}'.format(cur_stain)]
@@ -2197,28 +2238,28 @@ class FISH2():
                 updateCurExp()
                 if cur_exp['Current_cycle_{}'.format(cur_stain)] >= cur_exp['Target_cycles_{}'.format(cur_stain)]:
                     #Start the last imaging
-                    self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                    self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
                     #Logging
-                    self.L.logger.info('FINISHED {}, Removing from database and FISH_System_datafile.yalm'.format(cur_exp['EXP_number_{}'.format(cur_stain)]))
+                    self.L.logger.info('FINISHED {}, Removing from database and FISH_System_datafile.yalm'.format(cur_exp['EXP_name_{}'.format(cur_stain)]))
                     #Log the targets
                     self.L.logger.info('Targets:\n'+''.join('{}\n'.format(i) for i in self.Targets))
                     wrappup = True
                     if remove_experiment == True:    
                         #Notify user
-                        short_message = '{} Finished'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
+                        short_message = '{} Finished'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
                         long_message = '''Full experiment completed. 
                         All experimental info will be removed from database and FISH_Sytem_datafile.yaml\n
                         You can now add a new EXP_{} to the FISH_Sytem_datafile.yaml, via the user program.'''.format(cur_stain)
                         self.push(short_message, long_message)
                         print(short_message + '\n' + long_message + '\n')
                         #Remove experiment from database and FISH_System_datafile
-                        perif.removeExperiment(self.db_path, cur_exp['EXP_number_{}'.format(cur_stain)])
+                        perif.removeExperiment(self.db_path, cur_exp['EXP_name_{}'.format(cur_stain)])
                         cur_exp['Current_cycle_{}'.format(cur_stain)] = 0
                         cur_exp['Current_part_{}'.format(cur_stain)] = 'None' 
                     else:
                         #Notify user
-                        short_message = '{} Finished'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
+                        short_message = '{} Finished'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
                         long_message = '''Full experiment completed. 
                         Ready to start a new experiment. Starting secure sleep'''.format(cur_stain)
                         self.push(short_message, long_message)
@@ -2232,13 +2273,13 @@ class FISH2():
                 #Check new experiment flag, For new experiment Other
                 #Give user oportunity to prepare imaging Other.
                 if perif.returnDictDB(self.db_path, 'Flags')[0]['New_EXP_flag_{}'.format(other)] == 1:
-                    short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_number_{}'.format(other)])
+                    short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_name_{}'.format(other)])
                     long_message = '''Reply with "Pause" if you want to prepare the imaging now (set ROI, focusing etc.).\n
                     There will be another oportunity after the imaging of {}\n
-                    Reply: "Pause", reply time 10min'''.format(cur_exp['EXP_number_{}'.format(cur_stain)])
+                    Reply: "Pause", reply time 10min'''.format(cur_exp['EXP_name_{}'.format(cur_stain)])
                     self.push(short_message, long_message)
                     print(short_message + '\n' + long_message + '\n')
-                    print('\nYou can now prepare the imaging of {}'.format(cur_exp['EXP_number_{}'.format(other)]))
+                    print('\nYou can now prepare the imaging of {}'.format(cur_exp['EXP_name_{}'.format(other)]))
 
                     #10 minutes reply time
                     time.sleep(60 * 10) 
@@ -2247,13 +2288,13 @@ class FISH2():
                         short_message = 'Experiment paused'
                         long_message = 'Pause untill user input. Prepare imaging now (set ROI, focusing etc.).'
                         self.push(short_message, long_message)
-                        print('\nExperiment paused before imaging {} so that user can prepare the imaging of {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['EXP_number_{}'.format(other)]))
+                        print('\nExperiment paused before imaging {} so that user can prepare the imaging of {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['EXP_name_{}'.format(other)]))
                         input('Press Enter to continue when ready...')
                         perif.removeFlagDB(self.db_path, 'New_EXP_flag_{}'.format(other))
                         updateCurExp()
                     else:
                         short_messgage = 'Continuing'
-                        long_message = 'Experiment not paused, continuing with imaging of {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
+                        long_message = 'Experiment not paused, continuing with imaging of {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
                         self.push(short_message, long_message)
                         print(short_message + '\n' + long_message + '\n')
                         updateCurExp()
@@ -2261,9 +2302,9 @@ class FISH2():
                 #Before imaging Current_stain check if imaging has been set for Current_stain
                 if perif.returnDictDB(self.db_path, 'Flags')[0]['New_EXP_flag_{}'.format(cur_stain)] == 1:
                     while True:
-                        short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
+                        short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
                         long_message = '''Prepare imaging of {} (set ROI, focusing etc.).\n
-                        If you already did this reply with: "Continue". Relpy time 10min.'''.format(cur_exp['EXP_number_{}'.format(cur_stain)])
+                        If you already did this reply with: "Continue". Relpy time 10min.'''.format(cur_exp['EXP_name_{}'.format(cur_stain)])
                         self.push(short_message, long_message)
                         print(short_message + '\n' + long_message + '\n')
                         print('If you can not sent push messages: Remove "New_EXP_flag_{}" from the user program'.format(cur_stain))
@@ -2275,7 +2316,7 @@ class FISH2():
                             break
              
                 #Start imaging of Current_Stain, will wait untill the imaging of the other chamber has finished.
-                self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                 self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
 
                 #FLIP the conditions of the 2 chambers
