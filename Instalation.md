@@ -6,7 +6,7 @@
 
 ### Make an environment
 - Open the Anaconda Prompt (found under Windows start)
-- Create a new environment: `conda create --name <NAME> pyton=3.7`
+- Create a new environment: `conda create --name <NAME> python=3.7`
 - Activate the environment: `activate <NAME>`
 
 ### Install the dependencies
