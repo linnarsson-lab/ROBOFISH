@@ -59,6 +59,22 @@ Next you need to find the communication ports with which the computer can commun
 - In the Machines table, put a 1 for each machine that is connected.
 - Save and close the Notepad. In the user program hit enter to save the data and close the prime port popup.
 
+### Yoctopuce Thermistor
+If you are using the FCS2 flow cell you need to connect the Yoctopuce Thermistor temperature sensor to measure the room temperature and chamber temperature.
+To set it up follow these steps:
+- Connect one of the supplied Thermistor to port 1.
+- Connect the FCS2 thermistor to the Yoctopuce Thermistor. Use the middle two pins on the FCS2
+- Connect the Yoctopuce Thermistor with a USB to USB micro cable to the computer. The lights should turn on now.
+- From the Yoctopuce website download the Python [libraries](https://www.yoctopuce.com/EN/libraries.php)
+- Coppy the following files to the ROBOFISH folder"
+  - f1
+  - f2
+  - folder cdll
+- Download the Virtual hub software from [here](https://www.yoctopuce.com/EN/virtualhub.php) and install it with [these instructions](https://www.yoctopuce.com/projects/VirtualHub/VIRTHUB0.usermanual-EN.pdf)
+- Go to the web page of the Thermistor [http://127.0.0.1:4444/](http://127.0.0.1:4444/)
+- Here you can configure the individual temperature sensors by putting in the specifications. Please refer to the manual for guidance. For the FCS2 use the thermistor specifications you got from Bioptechs. 
+- Save the settings and then make sure the temperature readings are correct (double click on the Thermistor name in the main menue). If all works close the webbsite and the Virtual hub program.
+
 ### Pushbullet communication
 The system communicates with the user with push messages through the program Pushbullet. The system will update you about the status of the experiment and will let you know if any of the buffers are getting low. Furthermore, it will sound the alarm is something is wrong. You will need an account at Pushbullet to use this functionality. 
 - Go to the website of [Pushbullet](https://www.pushbullet.com/). 
