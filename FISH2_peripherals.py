@@ -549,6 +549,8 @@ def newFISHdb(db_name):
                             Degassi INTEGER,
                             ThermoCube1 INTEGER,
                             ThermoCube2 INTEGER,
+                            Oasis1 INTEGER,
+                            Oasis2 INTEGER,
                             YoctoThermistor INTEGER,
                             TC720 INTEGER)""")
             cursor.execute("INSERT INTO Machines DEFAULT VALUES")
@@ -562,6 +564,8 @@ def newFISHdb(db_name):
                             Degassi TEXT,
                             ThermoCube1 TEXT,
                             ThermoCube2 TEXT,
+                            Oasis1 TEXT,
+                            Oasis2 TEXT,
                             YoctoThermistor TEXT,
                             TC720 TEXT)""")
             cursor.execute("INSERT INTO Machine_identification DEFAULT VALUES")
@@ -575,6 +579,8 @@ def newFISHdb(db_name):
                             Degassi TEXT,
                             ThermoCube1 TEXT,
                             ThermoCube2 TEXT,
+                            Oasis1 TEXT,
+                            Oasis2 TEXT,
                             YoctoThermistor TEXT,
                             TC720 TEXT)""")
             cursor.execute("INSERT INTO Fixed_USB_port DEFAULT VALUES")

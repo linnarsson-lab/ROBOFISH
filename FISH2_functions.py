@@ -54,26 +54,32 @@ try:
 except ModuleNotFoundError:
     print('Module XCalibur not found. Ignore if not in use.')
 
-    # MX Valve
+    ## MX Valve
 import MXII_valve
 
     ## Thermo Cube
 try:
     import ThermoCube
 except ModuleNotFoundError:
-    print('Module ThermoCube not found. Ignore if machine is not in use')
+    print('Module ThermoCube not found. Ignore if machine is not in use.')
+
+    ## Oasis
+try:
+    import Oasis
+except ModuleNotFoundError:
+    print('Module Oasis not found. Ignore if machine is not in use.')
 
     ## Yoctopuce Thermistor
 try:
     import YoctoThermistor_FISH
 except ModuleNotFoundError:
-    print('Module YoctoThermisto_FISH not found. Ignore if machine is not in use')
+    print('Module YoctoThermisto_FISH not found. Ignore if machine is not in use.')
 
     ## TC-720 temperature controller
 try:
     import Py_TC720
 except ModuleNotFoundError:
-    print('Module Py_TC720 not found. Ignore if machine is not in use')
+    print('Module Py_TC720 not found. Ignore if machine is not in use.')
 
 #=============================================================================
 # Hardware address      
@@ -108,7 +114,7 @@ def find_address(identifier = None):
             \nContinue with manually finding USB address...\n'''.format(identifier))
         else:
             print('{:15}| {:15} |{:15} |{:15} |{:15}'.format('Device', 'Name', 'Serial number', 'Manufacturer', 'Description') )
-            for p in connections:
+            for p in port:
                 print('{:15}| {:15} |{:15} |{:15} |{:15}\n'.format(str(p.device), str(p.name), str(p.serial_number), str(p.manufacturer), str(p.description)))
             raise Exception("""The input returned multiple devices, see above.""")
 
@@ -239,10 +245,10 @@ class FISH2():
         
         # initialize Temperature Controller 1 (TC_1)
         if self.Machines['ThermoCube1'] == 1:
-            if device_COM_port['ThermoCube_1'] == None:
+            if device_COM_port['ThermoCube1'] == None:
                 self.L.logger.warning('    ThermoCube_1 not connected (no address available).')
             else:
-                self.TC_1 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube_1'], 
+                self.TC_1 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube1'], 
                                                   name = 'ThermoCube_1')
                 if self.TC_1.connected == True:
                     self.L.logger.info('    Temperature controller TC_1 Initialized.')
@@ -255,10 +261,10 @@ class FISH2():
 
         # initialize Temperature Controller 2 (TC_2) Replace this with your temperature controller if needed.
         if self.Machines['ThermoCube2'] ==1:
-            if device_COM_port['ThermoCube_2'] == None:
+            if device_COM_port['ThermoCube2'] == None:
                 self.L.logger.warning('    ThermoCube_2 not connected (no address available).')
             else:
-                self.TC_2 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube_2'], 
+                self.TC_2 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube2'], 
                                                   name = 'ThermoCube_2')
                 if self.TC_2.connected == True:
                     self.L.logger.info('    Temperature controller TC_2 Initialized.')
@@ -268,6 +274,38 @@ class FISH2():
                     self.L.logger.warning('    Could not make a connection with ThermoCube_2.')
         else:
             self.L.logger.info('        ThermoCube2 not connected according to user. Ignore if not needed.')
+
+        # initialize Temperature Controller 1 (TC_1)
+        if self.Machines['Oasis1'] == 1:
+            if device_COM_port['Oasis1'] == None:
+                self.L.logger.warning('    Oasis_1 not connected (no address available).')
+            else:
+                self.TC_1 = Oasis.Oasis(address = device_COM_port['Oasis1'], 
+                                                  name = 'Oasis_1')
+                if self.TC_1.connected == True:
+                    self.L.logger.info('    Temperature controller TC_1 Initialized.')
+                    self.setTemp(20, 'Chamber1')
+                    self.devices.append('Oasis1')
+                else:
+                    self.L.logger.warning('    Could not make a connection with Oasis_1.')
+        else:
+            self.L.logger.info('        Oasis1 not connected according to user. Ignore if not needed.')
+
+        # initialize Temperature Controller 2 (TC_2) Replace this with your temperature controller if needed.
+        if self.Machines['Oasis2'] ==1:
+            if device_COM_port['Oasis2'] == None:
+                self.L.logger.warning('    Oasis_2 not connected (no address available).')
+            else:
+                self.TC_2 = Oasis.Oasis(address = device_COM_port['Oasis2'], 
+                                                  name = 'Oasis_2')
+                if self.TC_2.connected == True:
+                    self.L.logger.info('    Temperature controller TC_2 Initialized.')
+                    self.setTemp(20, 'Chamber2')
+                    self.devices.append('Oasis2')
+                else:
+                    self.L.logger.warning('    Could not make a connection with Oasis_2.')
+        else:
+            self.L.logger.info('        Oasis2 not connected according to user. Ignore if not needed.')
 
         # Initiate TC720
         if self.Machines['TC720'] == 1:
@@ -289,7 +327,7 @@ class FISH2():
         # initialize Yocto_Thermistor
         if self.Machines['YoctoThermistor'] == 1:
             try:
-                self.temp = YoctoThermistor_FISH.FISH_temperature_deamon(serial_number = 'THRMSTR2-629D5', log_interval=10)
+                self.temp = YoctoThermistor_FISH.FISH_temperature_deamon(serial_number = self.Machine_identification['YoctoThermistor'], log_interval=10)
                 self.L.logger.info('    YoctoThermistor Initialized.')
                 self.temp.deamon_start()
                 self.devices.append('YoctoThermistor')
@@ -298,7 +336,6 @@ class FISH2():
                 self.L.logger.info('    Error code: {}'.format(e))
         else:
             self.L.logger.info('        YcotoThermistor not connected according to user. Ignore if not needed.')
-
 
         # Initialize syringe pump CavroXE1000
         if self.Machines['CavroXE1000'] == 1:
@@ -340,7 +377,7 @@ class FISH2():
         #Update active machines
         self.L.logger.info('    Connected devices: {}\n'.format(self.devices))
         #   Set them to 0 or 1 in the local dictionary and the database
-        for m in ['MXValve1', 'MXValve2', 'YoctoThermistor', 'CavroXE1000', 'CavroXCalibur', 'ThermoCube1', 'ThermoCube2', 'TC720']:
+        for m in ['MXValve1', 'MXValve2', 'YoctoThermistor', 'CavroXE1000', 'CavroXCalibur', 'ThermoCube1', 'ThermoCube2', 'Oasis1', 'Oasis2', 'TC720']:
             if m in self.devices:
                 print('Active machine: {}'.format(m))
                 self.Machines[m] = 1
@@ -471,6 +508,8 @@ class FISH2():
             'MXValve2': None,
             'ThermoCube1': None,
             'ThermoCube2': None,
+            'Oasis1': None,
+            'Oasis2': None,
             'YoctoThermistor': None,
             'TC720': None}
 
@@ -1109,7 +1148,7 @@ class FISH2():
         elif target.lower() == 'chamber2':
             chamber = 'C2_'
         else:
-            raise Exception ('Unknown Target: "{}". Choose "Chamber1" or "Chamber2"'.format(chamber))
+            raise Exception ('Unknown Target: "{}". Choose "Chamber1" or "Chamber2"'.format(target))
         
         cycle = str(cycle).zfill(2)
         
@@ -1158,7 +1197,7 @@ class FISH2():
         if not 0 <= volume_to_aspirate <= (max_volume + 1):
             raise(ValueError('''Pump syringe volume exceeded.\n
                 The volume and padding can not be more than: {}ul.\n
-                Volume to pipet: {}ul and padding volume: {}ul.'''.format(max_volume, volume, self.Padding[self.getPort(target)])))
+                Volume to pipet: {}ul and padding volume: {}ul.'''.format(max_volume, Hybmix_vol, self.Padding[self.getPort(target)])))
 
         #Check if the speed is valid
         if slow_speed == None or not self.pump.min_speed <= slow_speed <= self.pump.max_speed:
@@ -1443,7 +1482,7 @@ class FISH2():
         `chamber`(str): "Chamber1"(Left) or "Chamber2"(right).
 
         """
-        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices:
+        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices or 'Oasis1' in self.devices or 'Oasis2' in self.devices:
             if chamber.lower() == 'chamber1':
                 self.TC_1.set_temp(temperature)
                 self.target_temperature[0] = temperature
@@ -1475,7 +1514,7 @@ class FISH2():
 
         """
         step = abs(step)
-        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices:
+        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices or 'Oasis1' in self.devices or 'Oasis2' in self.devices:
             if chamber.lower() == 'chamber1':
                 cur_temp = self.temp.get_temp()[2]
                 for t in np.arange(cur_temp, temperature, step if cur_temp<temperature else -step):
@@ -1569,10 +1608,10 @@ class FISH2():
             #Notify the user if the temperature could not be reached.
             if counter >= 600 and (counter%300) == 0: #send 5 messages after 10min, every 5min.
                 #Check if the Temperature Control Unit reports an error.
-                if chamber.lower() == 'chamber1' and  'ThermoCube1' in self.devices:
+                if chamber.lower() == 'chamber1' and  ('ThermoCube1' in self.devices or 'Oasis1' in self.devices):
                     error_response = self.TC_1.check_error(verbose = True, raise_error = False)
                     tc = 'TC_1'
-                elif chamber.lower() == 'chamber2' and  'ThermoCube2' in self.devices:
+                elif chamber.lower() == 'chamber2' and   ('ThermoCube2' in self.devices or 'Oasis2' in self.devices):
                     error_response = self.TC_2.check_error(verbose = True, raise_error = False)
                     tc = 'TC_2'
                 elif 'TC720' in self.devices:
@@ -1590,7 +1629,7 @@ class FISH2():
                 for i in range(5):
                     timeout_message = 'Target temperature of {}C could not be reached in 10 min, check system. Current temperature: {}C on {}, Errors on {}: {}'.format(target_temp, cur_temp, chamber, tc, error_message)
                     self.L.logger.info('    ' + timeout_message)
-                    pself.push(short_message='Temperature warning',
+                    self.push(short_message='Temperature warning',
                                long_message= timeout_message)
 
             counter +=1        
@@ -1671,7 +1710,7 @@ class FISH2():
 
     def check_error_TC1(self, verbose=False):
         'Check errors on ThermoCube1.'
-        if self.Machines['ThermoCube1'] == 1:
+        if self.Machines['ThermoCube1'] == 1 or self.Machines['Oasis'] == 1:
             try:
                 TC_1_error = self.TC_1.check_error(verbose=False, raise_error=False)
             except Exception as e:
@@ -1684,13 +1723,13 @@ class FISH2():
 
     def check_error_TC2(self, verbose=False):
         'Check errors on ThermoCube2.'
-        if self.Machines['ThermoCube2'] == 1:
+        if self.Machines['ThermoCube2'] == 1 or self.Machines['Oasis'] == 1:
             try:
                 TC_2_error = self.TC_2.check_error(verbose=False, raise_error=False)
             except Exception as e:
                 TC_2_error = [False, 'TC_2 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
             if verbose:
-                print('    TC2: {}'.format(TC_1_error))
+                print('    TC2: {}'.format(TC_2_error))
             return TC_2_error
         else:
             return None
@@ -1714,7 +1753,7 @@ class FISH2():
                     if C1_temp > (self.target_temperature[0] + temperature_range) or C1_temp < (self.target_temperature[0] - temperature_range):
                         C1_temprature_error = [False, 'Chamber1 is {}C, and should be at {}C'.format(C1_temp, self.target_temperature[0])]
                         if verbose:
-                            print('    C1: {}'.format(C1_temperature_error))
+                            print('    C1: {}'.format(C1_temprature_error))
 
                 #Check if chamber 2 is far off from the target temperature
                 C2_temprature_error = None
@@ -1722,7 +1761,7 @@ class FISH2():
                     if C2_temp > (self.target_temperature[1] + temperature_range) or C2_temp < (self.target_temperature[1] - temperature_range):
                         C2_temprature_error = [False, 'Chamber2 is {}C, and should be at {}C'.format(C2_temp, self.target_temperature[1])]
                         if verbose:
-                            print('    C2: {}'.format(TC2_temperature_error))
+                            print('    C2: {}'.format(C2_temprature_error))
                         
             except Exception as e:
                 temperature_error = [False, 'Could not read temperature from Yocto Thermistor, check connection. Error: {}'.format(e)]
