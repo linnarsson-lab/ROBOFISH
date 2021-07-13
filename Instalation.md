@@ -6,38 +6,33 @@
 
 ### Make an environment
 - Open the Anaconda Prompt (found under Windows start)
-- Create a new environment: `conda create --name <NAME> python=3.7`
+- Create a new environment: `conda create --name <NAME> python=3.7` Where `<NAME>` is a name of your choosing, for instance `py3`
 - Activate the environment: `activate <NAME>`
 
 ### Install the dependencies
 - Install the python dependencies: `conda install numpy pyyaml pyserial`
 - Install the python dependencies: `pip install ruamel.yaml pushbullet.py` (these are not available on conda)
 - Install Jupyter Lab: `conda install -c conda-forge jupyterlab`
+- Add the environment to Jupyter Lab: `python -m ipykernel install --user --name <NAME> --display-name '<NAME>'`
 - Install Notepadd++ from: https://notepad-plus-plus.org
 
 # ROBOFISH setup
 ### Get source
-- Clone or download this repository (is this correct??)
-
-
-I set up the system first as it is on the other computer. Afterwards, make the updates to make it nice and then upload everything here.
-- ports with numbers and not names
-- extra dictionary which says which buffers are in which port for the logging
+- Clone or download this repository.
 
 
 ### Start user program
 The user program is the main interface for the user to give expermental parameters to the system.  
 With the user program you can open a text file (FISH2_System_datafile.yaml) that contains all metadata of the system and the experiments. This data is uploaded to a central database that the system can acces to perform the correct experiment.
-- Open the FISH_System_datafile_template.yaml by clicking on it.
-- Edit the data if needed and save as FISH_System_datafile.yaml. This is the main entry point for data (experimental parameters, settings, etc.) for the user. For now it is not needed to change any data.
 - Start a new Anaconda Prompt and activate your environment using: `activate <NAME>`
 - Change directory to the folder with the ROBOFISH code: `cd <PATH>` for instance if it is on your desktop: `cd Desktop\ROBOFISH`
-- Start the user program with: `python FISH2_user_program.py` (CHANGE TO ROBOFISH)
+- Start the user program with: `python FISH2_user_program.py`
 - A database will be created and the datafile will open.
-- You do not need to change anything at this point but you could add your name after operator. For yaml files it is important to always put a space between the colon and value, like: `Operator: Lars`. Save and close.
-- Hit enter if all data is updated and Notepad++ is closed
+- You do not need to change anything at this point so close the window. 
+- In the Anaconda prompt running the user program, hit enter.
 - A dialoage will open asking if any of the buffers need to be primed which is not needed at this point. Close to continue.
 - The information will now be uploaded to the central database.
+- Afterwards the user program will return to its default state, which gives the user the option to update the experimental parameters or pause the experiment.
 
 ### Run system
 The system is run using a jupyter lab notebook. In this notebook you will find some standard high level functions to perform an experiment on the ROBOFISH system. Furthermore, you can make your own functions and put them in the scheduler function that executes the experiment.
@@ -45,9 +40,11 @@ The system is run using a jupyter lab notebook. In this notebook you will find s
 - Change directory to the ROBOFISH folder: `cd <PATH>`.
 - Start Jupyter Lab by running: `jupyter lab`, it will open in your browser.
 - Run the ROBOFISH_program by clicking `ROBOFISH_program.ipynb`.
+- Make sure the correct kernel is selected. Under `Kernel` click: `Change kernel...` and select the name of the environment. 
 
 ### Find communication ports for all devices
-Next you need to find the communication ports with which the computer can communicate with the devices. The FISH2_functions, contains a convienicence function `find_address()` that helps you find the ports. There are two ways to tell the system how to communicate with the devices, either through a unique machine identifier or by giving the identifier of the USB port teh machine is connected to. It is advised to use the unique machine identifier method, because this will still work if you swich around the USB cabels. While the other method asigns a specific USB port and thus will not work when you change the cabels. Many USB controlled machines contain an FTDI chip that converts the signal comming from the USB port to serial. These chips store a number of atributes that can be used to identify the machine, for instance FTDI unique identifier, or machine company name. If you happen to know one of these attribute you can try to use that to identify the device. Otherwise, the `find_address()` function guides you through the process of finding the machine identifier and port by unplugging and plugging the USB cable. For the USB adresses; On windows these ports are called "COMX" where X is the number of the port. In linux they are labeled '/dev/ttyUSBX' where X is the number of the port. For both methods, the identification numbers or ports need to be added to the FISH_System_datafile so that the system can connect to the devices. 
+Next you need to find the communication ports with which the computer can communicate with the devices. The FISH2_functions, contains a convienicence function `find_address()` that helps you find the ports.  
+There are two ways to tell the system how to communicate with the devices, either through a unique machine identifier or by giving the identifier of the USB port the machine is connected to. It is advised to use the unique machine identifier method, because this will still work if you swich around the USB cabels. While the other method asigns a specific USB port and thus will not work when you change the cabels. Many USB controlled machines contain an FTDI chip that converts the signal comming from the USB port to serial. These chips store a number of atributes that can be used to identify the machine, for instance FTDI unique identifier, or machine company name. If you happen to know one of these attribute you can try to use that to identify the device. Otherwise, the `find_address()` function guides you through the process of finding the machine identifier and port by unplugging and plugging in the USB cable. For the USB adresses; On windows these ports are called "COMX" where X is the number of the port. In linux they are labeled '/dev/ttyUSBX' where X is the number of the port. For both methods, the identification numbers or ports need to be added to the FISH_System_datafile so that the system can connect to the devices. 
 - Make sure all machines are connected and ON.
 - In the user program open the datafile by typing `all`, this will open the System_datafile in Notepad++.
 - In the Jypyter lab import the FISH2_functions: `import FISH2_functions`.
