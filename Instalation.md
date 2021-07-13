@@ -51,18 +51,18 @@ There are two ways to tell the system how to communicate with the devices, eithe
 - Call the find_address function: `FISH2_functions.find_address(identifier=None)`.
 - If you know the identifier of the machine give it to the function as string: `FISH2_functions.find_address(identifier='XYZ123')`.
 - Follow the instruction of the `find_address()` function.
-- Once you have the identifier and USB port, fill it in in the FISH_System_datafile. Either fill in the unique machine identifire in the Machine_identification table, or fill in the USB port in the Fixed_USB_port table. Preferentially use the Machine_identification method. Different strategies can be used for different machines. Make sure there is a space between name and the value in the FISH_System_datafile, like: MXValve1: XYZ123.
-- In the Ports table add the port numbers the buffers are connected to. The port numbers are written on the multi valve front. The left valve (for recervoir/buffers/waste/hybridization chamer) is numbered 1 through 10. The right valve (for hybridization mixes) is labeled 11 through 20 in the program. 
+- Once you have the identifier and USB port, fill it in in the FISH_System_datafile. Either fill in the unique machine identifer in the Machine_identification table, or fill in the USB port in the Fixed_USB_port table. Preferentially use the Machine_identification method. Different strategies can be used for different machines. Make sure there is a space between name and the value in the FISH_System_datafile, like: MXValve1: XYZ123.
+- In the Ports table add the port numbers the buffers are connected to. The port numbers are written on the multi valve front. The valve connected to the reservoir and syringepump is called `MXValve1` and its ports are numbered 1 through 10. The other valve which has its central port connected to `MXValve1` is called MXValve2 and its ports are numbered 11 through 20 in the program. 
 - In the Machines table, put a 1 for each machine that is connected.
 - Save and close the Notepad. In the user program hit enter to save the data and close the prime port popup.
 
 ### Yoctopuce Thermistor
 If you are using the FCS2 flow cell you need to connect the Yoctopuce Thermistor temperature sensor to measure the room temperature and chamber temperature.
 To set it up follow these steps:
-- Connect one of the supplied Thermistor to port 1.
-- Connect the FCS2 thermistor to the Yoctopuce Thermistor. Use the middle two pins on the FCS2
+- Connect one of the supplied Thermistors to port 1.
+- Connect the FCS2 thermistor to the Yoctopuce Thermistor with a electrical wire and two pins. Use the middle two slots on the FCS2.
 - Connect the Yoctopuce Thermistor with a USB to USB micro cable to the computer. The lights should turn on now.
-- From the Yoctopuce website download the Python [libraries](https://www.yoctopuce.com/EN/libraries.php)
+- From the Yoctopuce website download the Python [libraries](https://www.yoctopuce.com/EN/libraries.php).
 - Coppy the following files to the ROBOFISH folder"
   - f1
   - f2
@@ -73,27 +73,28 @@ To set it up follow these steps:
 - Save the settings and then make sure the temperature readings are correct (double click on the Thermistor name in the main menue). If all works close the webbsite and the Virtual hub program.
 
 ### Pushbullet communication
-The system communicates with the user with push messages through the program Pushbullet. The system will update you about the status of the experiment and will let you know if any of the buffers are getting low. Furthermore, it will sound the alarm is something is wrong. You will need an account at Pushbullet to use this functionality. 
+The system communicates with the user with push messages through the program Pushbullet. The system will update you about the status of the experiment and will let you know if any of the buffers are getting low. Furthermore, it will sound the alarm is something is wrong. You will need an account at Pushbullet to use this functionality. It is recommended to get a paid account. The free account only allowes an X ammount of messages to be sent. In normal operation this should be enough but in case there is something wrong the ROBOFISH system can send a lot of messages to alarm the user, maxing out the quota, so that you will not receive any messages. 
 - Go to the website of [Pushbullet](https://www.pushbullet.com/). 
 - Make an account.
 - Go to settings and create and acces token. This will be your address.
 - Install the Pushbullet [app](https://www.pushbullet.com/apps) on your [phone](https://play.google.com/store/apps/details?id=com.pushbullet.android&referrer=utm_source%3Dpushbullet.com) (android only), web browser or Windows.
 - In the user program open the datafile by typing `part`.
-- In the Operator_address table add your name in lower case and the Pushbullet token.
-- You can add up to 10 operators.
+- In the Operator_address table add your Pushbullet token after one of the `OperatorX` slots. When you are using the program you will need to use your `OperatorX` identifier as your name. You can add up to 10 operators.
 - Save and close the datafile, hit enter in the user program.
-- In the popup window indicate that you updated the Operator_address.
+- In the popup window indicate that you updated the Operator_address. In this section you used the `part` updating method. This is a bit quicker than using `all` but there is a risk that you forget to click the tickboxes so that the data is not uploaded to the machine. 
 
 ### Initiate the system
 The next cell in the Jupyter lab notebook will contain the functions to initiate the system. First make sure all paths in this cell are correct.
 - Make sure the path to the database is correct. In your ROBOFISH folder a new folder should have been made called `FISH_database` containing the database: `FISH_System2_db.sqlite`. Add the path to this file in the Jupyter lab (Windows: right click, properties, Location). 
 - For the first run you can ignore the `start_imaging_file_path` and the `imaging_output folder`. Below are the explanations if you want to set them up.
-  - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a 0. 0 means no sample to image. 1 means start imaging of the sample or sample number 1. Or another number if there are multiple samples.)
-  - For the 'imaging_output_folder' specifiy the path were the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)`
+  - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a `0`. `0` means no sample to image. `1` means start imaging of the sample or sample number 1. Or another number if there are multiple samples.)
+  - For the `imaging_output_folder` specifiy the path were the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)`
 
-- Make sure the recevoir is on the right side of the pump. OTHERWISE CHANGE THIS TO THAT.....
+- The pump needs to know which side is the input port and which is the output port. At the moment this is hardcoded and needs to be changed manually. Ín the ROBOFISH folder open the `FISH2_functions.py` file. In line 348 you can change the input port. The input port is the port that is connected to the RunningBuffer. If the Running buffer is connected left and the rescervoir right, set the `'in_port equal'` to `'lef'`, like: `self.pump.init(in_port='left', init_speed = 20)` If your ports are mirrored  set `in_port` equal to `'right'`.
 - If something goes wrong and you want to restart the initiation, you probably need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports will be dedicated already and can not be reassigned by the same python kernel. 
-
+  
+- Now initiate the system by calling: `F2 = FISH2_functions.FISH2(db_path, imaging_output_folder, start_imaging_file_path, system_name='ROBOFISH')`
+- In the `XXXXXXXXXXXXXXXXXXXXX file with basic instructions` file you will find examples and explanation of the basic and advanced functions of ROBOFISH so that you can program you own protocols. In the `XXXXXXXXXXXXXXXXXXX EEL.ipynb` file you will find the full protocol to run EEL experiments.
 
 find padding volume  
 
@@ -102,8 +103,17 @@ find padding volume
 - job inport instructions
 
 ### Set up color channels
-They need to be either FITC, CY3 etc.....
-- matching the ROBOFISH targets
+The ROBOFISH system has a predefined set of fluorescent channel names that can be used. These names need to be standardized because the metadata file links the labeled gene or barcode bit to the actual image using this name.  
+The allowed names are: `DAPI`, `Atto425`, `Europium`, `FITC`, `Cy3`, `TxRed`, `Cy5`, `Cy7`, `QDot` and `Brightfield`  
+In the Nikon NIS Elemens software call the optical configurations with these names. 
+  
+Unfortunately, these names can not be changed easily, but it is possible. If you want this follow the below steps:
+- In the `FISH2_peripherals.py` file you will have to replace all instances one of the above names with the new name. 
+- Do the same for the `FISH2_functions.py` file.
+- And also for the `FISH_System_datafile.yaml` and `FISH_System_datafile_template.yaml` files.
+- Then delete the `FISH2_System2_db.sqlite` file from the `ROBOFISH\FISH_database` folder.
+- Afterwards, Restart the ROBOFISH system. This will recreate the database with the new names.
+- Make sure Nikon Nis Elements has the new name as name for the Optical Configuation. 
   
 ### Enable info file renaming  
 The ROBOFISH program makes an info file for every round of labeling, which contains all metadata for that round and puts it in the folder with all the images. The info file contains the Targets given by the user which couples image colour channel with the target gene or target barcoding bit name.  
@@ -117,4 +127,7 @@ To match this round info file with a certain image, the Imaging job renames the 
 - Click Ok on all windows.
 - To test if it worked, open a new Windows Command Prompt and type `python`. You should now see the python interpreter. 
 
-
+### Other imaging software
+The start of the imaging software is regulated through the `start_imaging_file.txt` in the `ROBOFISH\FISH_database` folder as explained above. To start the imaging, the Nikon software checks this file every ~2 minutes to see if the zero has been changed to a 1 or 2. If it did, it will start the imaging of the respective flow cell. When the imaging is done the Nikon software resets the `start_imaging_file.txt` to zero, so that the ROBOFISH software knows that it can continue with the next fluidic round. If you use different microscope software you shoud make functions that mimic this behaviour and it should work.  
+  
+To link the info files to specific image file you can use the `rename_info_file.py` program. The info files will be generated with a name starting with `TEMPORARY` the `rename_info_file.py` program changes the temporary part to `CountXXXXX` where XXXXX will be a number for the labeling cycle. Have your program call the `rename_info_file.py` program with the cycle number and the imaging output folder as inputs.
