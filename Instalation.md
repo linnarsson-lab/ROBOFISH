@@ -94,8 +94,11 @@ Continue with the next part.
 For the buffer names you just added, fill in the volume of the connected buffer in microliter at the corresponding port. For instance if you have connected 100ml of Running buffer, enter 100000 after Running buffer. Or if the waste bottle is empty, enter 0 after the port connected to the waste.  
 Continue with the next part.
 
-### Confiuring alarm volumes.
+### Configuring alarm volumes.
 Scroll down in the info file untill you found the Alert_volumes table. This table contains volumes below or above which the system will warn the user. For instance if the waste container is full, meaning it is above the given alter volume, it will send a message to the user. Or if one of the buffers is running low it will send an alarm. Additionally it checks if there is enough disk space. For now, just add a volume for the connected buffers at 10% of the containers volume. Or at 90% of the waste container volume. Later you can fine tune these numbers.  
+
+### Configuring connected machines.
+In the machines table add a `1` for machines that are connected or a `0` for machines that are not connected. 
   
 Save and close the Notepad. In the user program hit enter to save the data and close the prime port popup.
 
@@ -126,27 +129,36 @@ For every port that is connected to something (Excluding Valve2 and Waste) start
 
 # Operation
 
-## Configuring the datafile
+Starting a new experiment should start with filling in the experimental info into the datafile using the user program. Below the various parts are explained if they have not yet been discribed above. Additionaly the datafile has many coments that help the user to format the data.
+
+## Configuring the datafile and priming of ports
+Open the file by entering `all` in the FISH2_user_program. When all data has been changed, safe the file and close. You will now see a popup that askes you if you want to prime any buffers. Even though all ports are listed you should only prime buffers that you connect. So do not prime: Flow cells, RunningBuffer, Waste port or hybridization mixes! If you for instance have connected a new aliquot of imaging buffer, click the box of the port number it is connected to. The ROBOFISH system will not immediately prime it but it will do it before it executes its next operation.
 
 ### Configure expperimental parameters
+In the `Parameters` table you will find space to fill in various parameters and metadata variables for the experiment. Below is a highlight of a couple of the most important parameters. Up to two flow cells are supported and the parameters for a respective flow cell are followd by and `_1` for Chamber1 or `_2` for Chamber2.
+- Operator: This is used to send messages to the user, and should match the items in `Operator_address`.
+- EXP_name_X: For an experiment to get started by the ROBOFISH system it needs to have an experiment name.
+- There are various parameters that are needed to determine steps of the image anslysis pipeline. See the options in the comments of the datafile and the image analysis documentation.
+- `Hybmix_volume`: This is the volume used for hybridization. It also determines how much of the other buffers need to be despenced to the flow cell and is synonymous for the flow cell internal volume. It is advisable to have this volume slightly larger than the actual volume of the flow cell and when hybridization mixes are loaded into the system to put a little bit more in the eppendorf tube to prevent air bubbles. 
+- There are multiple temperature values for various parts of the protocol. In the ROBOFISH program these will be accessible from the F2.Parameters dictionary. 
 
 ### Configure volumes
-The program keeps track of the buffers that 
+As discussed above, in the `Volumes` table the actual buffer volumes are tracked. When placing a new buffer in the system enter its volume here in microliter. When the datafile is opened through the user programm the volumes will be updated to the actual values. 
 
 ### Configure Hybridizaiton mixes
+In the `Hybmix` table you can tell the system to which ports a certain hybridization mix is connected. The names of the hybridization mixes should be of the format `<chamber>_<cycle>`. For instance if you put the hybridizaiton mix with probes for the first round of Chamber1 in the slot connected to port 1, you enter `C1_01` after P1. Or for chamber2 cycle 12 use the code `C2_12`.  
+For more advanced hybridization schemes where first one or two amplifire probes are hybridized you can use the addition of `_A`,  `_B` or `_C` for up to 3 hybridizations in the same cycle. 
 
 ### Configure targets
-
-### Configure machines
-
-### Configure Alert volumes
+In the `Targets` table you can fill in the target that is imaged in a certain channel in a certain cycle. For each Chamber there is a list of 20 hybridization round with all the channels listed. After the channel write the target that is imaged in that channel in that cycle. For instance if you stained for Actin in the FITC channel in cycle 1, enter Actb after FITC in the Hybridization01 table. You can also enter a barcode bit number, Nuclei, PolyA, or beads.
 
 ## Configure the scheduler
+Once the parametrs are all filled in you can start the experiment. You do this by defining two functions and giving this to the scheduler. The first function should perform the first cycle of the experiment. The second function is a function that is repeated for all other cycles. Please see the  `XXXXXXXXXXXXXXXXXXXXX file with basic instructions` for an introduction on how to program your own protocol and execute it with the scheduler. Or run the EEL experiment by using the  `XXXXXXXXXXXXXXXXXXX EEL.ipynb` file. 
 
 # Imaging with Nikon NIS Elements
 
 ### Install job
-- job import instructions
+Open te NIS Elements JOBS explorer and import the `XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` imaging job 
 
 ### Set up color channels
 The ROBOFISH system has a predefined set of fluorescent channel names that should be used. These names need to be standardized because the metadata file links the labeled gene or barcode bit to the actual image using this name.  
