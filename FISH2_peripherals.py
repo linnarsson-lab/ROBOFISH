@@ -169,7 +169,6 @@ def yamlMake(filepath, new={}):
     Input:
     `filepath`(str): Full filepath with file name.
     `new`(dict): New dictionary to dump to the file
-
     """
     with open(filepath, 'w') as new_yaml_file:
         ruamel.yaml.dump(new, new_yaml_file, default_flow_style=False)
@@ -218,8 +217,15 @@ def yamlUpdate(filepath, new, file_extension=None):
     `file_extension`(str):Optional file extension for new file.
     
     """
+    print('got here')
+    yaml = ruamel.yaml.YAML()
+    yaml.preserve_quotes = True
+    yaml.indent(mapping=4)
+
+    #with open(filepath, "r") as yaml_file:
+    #    config, ind, bsi = load_yaml_guess_indent(yaml_file)
     with open(filepath, "r") as yaml_file:
-        config, ind, bsi = load_yaml_guess_indent(yaml_file)
+        config = yaml.load(yaml_file)
     
     #use 'updateDict' function that can update one value in a nested dict.
     updateDict(config, new)
@@ -230,9 +236,11 @@ def yamlUpdate(filepath, new, file_extension=None):
     else:
         new_name = filepath
         
+    #with open(new_name, 'w') as updated_yaml_file:
+    #    ruamel.yaml.round_trip_dump(config, updated_yaml_file, 
+    #                                indent=ind, block_seq_indent=bsi)
     with open(new_name, 'w') as updated_yaml_file:
-        ruamel.yaml.round_trip_dump(config ,updated_yaml_file, 
-                                    indent=ind, block_seq_indent=bsi)
+        yaml.dump(config, updated_yaml_file)
 
 def getFISHSystemMetadata(filename, table=None):
     """
@@ -380,7 +388,13 @@ def newFISHdb(db_name):
                             Target_cycles_1 INTEGER,
                             Barcode_1 TEXT,
                             Chemistry_1 TEXT,
-                            Probe_FASTA_name_1 TEXT,
+                            Probe_FASTA_DAPI_1 TEXT,
+                            Probe_FASTA_Atto425_1 TEXT,
+                            Probe_FASTA_FITC_1 TEXT,
+                            Probe_FASTA_Cy3_1 TEXT,
+                            Probe_FASTA_TxRed_1 TEXT,
+                            Probe_FASTA_Cy5_1 TEXT,
+                            Probe_FASTA_Cy7_1 TEXT,
                             Codebook_DAPI_1 TEXT,
                             Codebook_Atto425_1 TEXT,
                             Codebook_FITC_1 TEXT,
@@ -395,7 +409,7 @@ def newFISHdb(db_name):
                             Sample_1 TEXT,
                             Age_1 TEXT,
                             Tissue_1 TEXT,
-                            Orrientation_1 TEXT,
+                            Orientation_1 TEXT,
                             RegionImaged_1 TEXT,
                             SectionID_1 TEXT,
                             Position_1 TEXT,
@@ -416,7 +430,13 @@ def newFISHdb(db_name):
                             Target_cycles_2 INTEGER,
                             Barcode_2 TEXT,
                             Chemistry_2 TEXT,
-                            Probe_FASTA_name_2 TEXT,
+                            Probe_FASTA_DAPI_2 TEXT,
+                            Probe_FASTA_Atto425_2 TEXT,
+                            Probe_FASTA_FITC_2 TEXT,
+                            Probe_FASTA_Cy3_2 TEXT,
+                            Probe_FASTA_TxRed_2 TEXT,
+                            Probe_FASTA_Cy5_2 TEXT,
+                            Probe_FASTA_Cy7_2 TEXT,
                             Codebook_DAPI_2 TEXT,
                             Codebook_Atto425_2 TEXT,
                             Codebook_FITC_2 TEXT,
@@ -431,7 +451,7 @@ def newFISHdb(db_name):
                             Sample_2 TEXT,
                             Age_2 TEXT,
                             Tissue_2 TEXT,
-                            Orrientation_2 TEXT,
+                            Orientation_2 TEXT,
                             RegionImaged_2 TEXT,
                             SectionID_2 TEXT,
                             Position_2 TEXT,
@@ -972,7 +992,6 @@ def yamlToDB_Machines(db_path):
     `db_path`(str): Full path to database.
     Fixed input:
     Working data file: 'FISH_System_datafile.yaml'
-
     """
     Machines_dict = getFISHSystemMetadata('FISH_System_datafile.yaml', table='Machines')
 
@@ -987,7 +1006,6 @@ def yamlToDB_Machine_identification(db_path):
     `db_path`(str): Full path to database.
     Fixed input:
     Working data file: 'FISH_System_datafile.yaml'
-
     """
     Machine_identification_dict = getFISHSystemMetadata('FISH_System_datafile.yaml', table='Machine_identification')
 
@@ -1002,7 +1020,6 @@ def yamlToDB_Fixed_USB_port(db_path):
     `db_path`(str): Full path to database.
     Fixed input:
     Working data file: 'FISH_System_datafile.yaml'
-
     """
     Fixed_USB_port_dict = getFISHSystemMetadata('FISH_System_datafile.yaml', table='Fixed_USB_port')
 
@@ -1017,7 +1034,6 @@ def yamlToDB_Operator_address(db_path):
     `db_path`(str): Full path to database.
     Fixed input:
     Working data file: 'FISH_System_datafile.yaml'
-
     """
     Operator_address_dict = getFISHSystemMetadata('FISH_System_datafile.yaml', table='Operator_address')
 
@@ -1332,7 +1348,6 @@ def countdown(seconds):
     Countdown, printing on same line.
     Input:
     `seconds`(int): Seconds to count down.
-
     """
     #From: http://stackoverflow.com/questions/3419984/print-to-the-same-line-and-not-a-new-line-in-python
     def pre(seconds):
