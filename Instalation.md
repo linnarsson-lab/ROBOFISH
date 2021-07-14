@@ -10,7 +10,7 @@
 - Activate the environment: `activate <NAME>`
 
 ### Install the dependencies
-- Install the python dependencies: `conda install numpy pyyaml pyserial`
+- Install the python dependencies: `conda install numpy pyyaml pyserial colorama`
 - Install the python dependencies: `pip install ruamel.yaml pushbullet.py` (these are not available on conda)
 - Install Jupyter Lab: `conda install -c conda-forge jupyterlab`
 - Add the environment to Jupyter Lab: `python -m ipykernel install --user --name <NAME> --display-name '<NAME>'`
@@ -19,7 +19,6 @@
 # ROBOFISH setup
 ### Get source
 - Clone or download this repository.
-
 
 ### Start user program
 The user program is the main interface for the user to give expermental parameters to the system.  
@@ -83,6 +82,23 @@ The system communicates with the user with push messages through the program Pus
 - Save and close the datafile, hit enter in the user program.
 - In the popup window indicate that you updated the Operator_address. In this section you used the `part` updating method. This is a bit quicker than using `all` but there is a risk that you forget to click the tickboxes so that the data is not uploaded to the machine. 
 
+### Configuring ports
+In the user programm select `all`. Go to the ports table and fill in the names of the buffers that are, or will be, connected. If you do not know that at this time it is no problem just leave it empty. However, you need to define the port connected to the `Waste` and `Valve2`. Valve1 is the valve that has its central port connected to the reservoir at its port are called P1 to P10. On the valve you will find numbers to figure our which port is which number. Valve2 has its middle port connected to Valve1 and its ports are called P11 to P20 in the program. 
+- Fill in which port is connected to `Waste` and `Valve2`.
+- Fill in the names of the connected buffers and the name of the RunningBuffer. For instance, inour case the RunningBuffer is SSC 2X so we fill in `RunningBuffer: SSC2X`.
+- To connect flow cells add the names `Chamber1` and if applicable `Chamber2` to the ports.
+- To connect hybridization mixes the names should have the format `HYBXX` where `XX` is the number.   
+Continue with the next part.
+
+### Configuring Volumes
+For the buffer names you just added, fill in the volume of the connected buffer in microliter at the corresponding port. For instance if you have connected 100ml of Running buffer, enter 100000 after Running buffer. Or if the waste bottle is empty, enter 0 after the port connected to the waste.  
+Continue with the next part.
+
+### Confiuring alarm volumes.
+Scroll down in the info file untill you found the Alert_volumes table. This table contains volumes below or above which the system will warn the user. For instance if the waste container is full, meaning it is above the given alter volume, it will send a message to the user. Or if one of the buffers is running low it will send an alarm. Additionally it checks if there is enough disk space. For now, just add a volume for the connected buffers at 10% of the containers volume. Or at 90% of the waste container volume. Later you can fine tune these numbers.  
+  
+Save and close the Notepad. In the user program hit enter to save the data and close the prime port popup.
+
 ### Initiate the system
 The next cell in the Jupyter lab notebook will contain the functions to initiate the system. First make sure all paths in this cell are correct.
 - Make sure the path to the database is correct. In your ROBOFISH folder a new folder should have been made called `FISH_database` containing the database: `FISH_System2_db.sqlite`. Add the path to this file in the Jupyter lab (Windows: right click, properties, Location). 
@@ -90,31 +106,63 @@ The next cell in the Jupyter lab notebook will contain the functions to initiate
   - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a `0`. `0` means no sample to image. `1` means start imaging of the sample or sample number 1. Or another number if there are multiple samples.)
   - For the `imaging_output_folder` specifiy the path were the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)`
 
-- The pump needs to know which side is the input port and which is the output port. At the moment this is hardcoded and needs to be changed manually. Ín the ROBOFISH folder open the `FISH2_functions.py` file. In line 348 you can change the input port. The input port is the port that is connected to the RunningBuffer. If the Running buffer is connected left and the rescervoir right, set the `'in_port equal'` to `'lef'`, like: `self.pump.init(in_port='left', init_speed = 20)` If your ports are mirrored  set `in_port` equal to `'right'`.
-- If something goes wrong and you want to restart the initiation, you probably need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports will be dedicated already and can not be reassigned by the same python kernel. 
-  
+- The pump needs to know which side is the input port and which is the output port. At the moment this is hardcoded and needs to be changed manually. In the ROBOFISH folder open the `FISH2_functions.py` file, change it and save:
+  - For the Tecan Cavro XE1000 pump: In line 348 you can change the input port. The input port is the port that is connected to the RunningBuffer. If the Running buffer is connected left and the rescervoir right, set the `'in_port equal'` to `'lef'`, like: `self.pump.init(in_port='left', init_speed = 20)` If your ports are mirrored  set `in_port` equal to `'right'`.  
+  - For the Tecan Cavro XCalibur pump: In line 372 set direction equal to `'Z'` if the RunningBuffer is connected to the left port and the reservoir to the the right, like: `direction='Z'`. If your ports are mirrored set `direction` equal to `'Y'`.
+    
 - Now initiate the system by calling: `F2 = FISH2_functions.FISH2(db_path, imaging_output_folder, start_imaging_file_path, system_name='ROBOFISH')`
 - In the `XXXXXXXXXXXXXXXXXXXXX file with basic instructions` file you will find examples and explanation of the basic and advanced functions of ROBOFISH so that you can program you own protocols. In the `XXXXXXXXXXXXXXXXXXX EEL.ipynb` file you will find the full protocol to run EEL experiments.
+- If something goes wrong and you want to restart the initiation, you need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports will be dedicated already and can not be reassigned by the same python kernel. 
 
-find padding volume  
+### Prime the system
+The reservoir needs to be filled with RunningBuffer for proper operation. There is a convenience function that guides you through all steps of the priming. Fill the RunningBuffer bottle with your buffer or water and then call the function with: `F2.primeSystem(system_dry = True)`, and follow the steps. At this point you only need to prime the RunningBuffer port and none of the other ports. 
 
-# NIS Elements job
+### Find padding volumes
+The system needs to know the dead volumes between the valves, buffers and flow cell(s) to accurately dispence the liquids to a specifc location. Dead volumes are called Padding volume and there are 3 different functions for helping you to find the correct volumes: `F2.findPaddingVolumeChamber()` for finding the padding volume between Valve1 and the flow cell. `F2.findPaddingVolumeHYBmix()` For finding the dead volume between Valve1 and the hybridization mixes. And `F2.findPaddingVolumeBuffer()` for finding the padding volume between Valve1 and a connected buffer container.  
+For the hybridization mixes and buffers these functions just aspirate a user defined volume and the user needs to see if the liquid reaches the reservoir, and the function guides the user through this process. It is best if the liquid just enters it. To accurately determine the dead volume it is adviced to use a test liquid with matching viscosity to the actual liquid that is going to be used.  
+For the flow cells and degasser, an air bubble is dispenced and the user needs to see if this air bubble just reaches its destination. For this to work properly remove the bubble trap and connecte the tubbing with an IDEX PXXX connector. Additionally swich off the degasser. Afterwards, add the known dead volume of the bubble trap to the pading volume.  
+These functions need also one `air_port` this is a port that is not connected to anything so that the machine can aspirate air. Give it the port ID like: 'P3' for port 3.  
+For every port that is connected to something (Excluding Valve2 and Waste) start the respective function and fill in the found padding volume in the Pading table of te FISH_system_datafile through the user program. 
+
+# Operation
+
+## Configuring the datafile
+
+### Configure expperimental parameters
+
+### Configure volumes
+The program keeps track of the buffers that 
+
+### Configure Hybridizaiton mixes
+
+### Configure targets
+
+### Configure machines
+
+### Configure Alert volumes
+
+## Configure the scheduler
+
+# Imaging with Nikon NIS Elements
+
 ### Install job
-- job inport instructions
+- job import instructions
 
 ### Set up color channels
-The ROBOFISH system has a predefined set of fluorescent channel names that can be used. These names need to be standardized because the metadata file links the labeled gene or barcode bit to the actual image using this name.  
+The ROBOFISH system has a predefined set of fluorescent channel names that should be used. These names need to be standardized because the metadata file links the labeled gene or barcode bit to the actual image using this name.  
 The allowed names are: `DAPI`, `Atto425`, `Europium`, `FITC`, `Cy3`, `TxRed`, `Cy5`, `Cy7`, `QDot` and `Brightfield`  
 In the Nikon NIS Elemens software call the optical configurations with these names. 
   
 Unfortunately, these names can not be changed easily, but it is possible. If you want this follow the below steps:
-- In the `FISH2_peripherals.py` file you will have to replace all instances one of the above names with the new name. 
+- In the `FISH2_peripherals.py` file you will have to replace all instances of one of the above names with the new name. 
 - Do the same for the `FISH2_functions.py` file.
 - And also for the `FISH_System_datafile.yaml` and `FISH_System_datafile_template.yaml` files.
 - Then delete the `FISH2_System2_db.sqlite` file from the `ROBOFISH\FISH_database` folder.
 - Afterwards, Restart the ROBOFISH system. This will recreate the database with the new names.
 - Make sure Nikon Nis Elements has the new name as name for the Optical Configuation. 
-  
+
+# Windows
+
 ### Enable info file renaming  
 The ROBOFISH program makes an info file for every round of labeling, which contains all metadata for that round and puts it in the folder with all the images. The info file contains the Targets given by the user which couples image colour channel with the target gene or target barcoding bit name.  
 To match this round info file with a certain image, the Imaging job renames the info file to match the file name of the image. The images get a "CountXXXXX" number by the imaging Job, and the imaging Job renames the info file with same "CountXXXX" number. To do this Nis Elements needs to run the `Rename_info_file.py` script. The following steps makes Python installed by Anaconda available for the whole system. Skip these steps if python is already available; test this by running `python` in a Windows Command Prompt (Not the Anaconda prompt). If this gives you a Python interpreter you should be set. If not follow the next steps:
@@ -127,6 +175,7 @@ To match this round info file with a certain image, the Imaging job renames the 
 - Click Ok on all windows.
 - To test if it worked, open a new Windows Command Prompt and type `python`. You should now see the python interpreter. 
 
+# Hardware alternatives
 ### Other imaging software
 The start of the imaging software is regulated through the `start_imaging_file.txt` in the `ROBOFISH\FISH_database` folder as explained above. To start the imaging, the Nikon software checks this file every ~2 minutes to see if the zero has been changed to a 1 or 2. If it did, it will start the imaging of the respective flow cell. When the imaging is done the Nikon software resets the `start_imaging_file.txt` to zero, so that the ROBOFISH software knows that it can continue with the next fluidic round. If you use different microscope software you shoud make functions that mimic this behaviour and it should work.  
   
