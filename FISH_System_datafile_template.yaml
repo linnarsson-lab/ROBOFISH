@@ -1,4 +1,4 @@
-# Automatic FISH system 2 info
+# Automatic ROBOFISH info
 # Make sure to always put a space between the colon and the value!
 FISHSystem:
     Parameters:
@@ -8,7 +8,7 @@ FISHSystem:
         Machine: ROBOFISH
         ########## EXPERIMENT 1 ##########
         #   Experiment name: Initials with date, like: LBEXP20181220_1
-        EXP_name_1: test
+        EXP_name_1: 
         #   Short description of the Experiment
         Description_1:
         #   Link to the protocol file on Protocols.io
@@ -18,7 +18,7 @@ FISHSystem:
         #   Chamber1 or Chamber2
         Chamber_EXP_1: Chamber1
         #   First Hybridization time in hours (encoding probes)
-        Hyb_time_1_A: 0.16
+        Hyb_time_1_A: 
         #   Second Hybridization time in hours (amplifier probes)
         Hyb_time_1_B:
         #   Third Hybridization time in hours (detection probes)
@@ -26,7 +26,7 @@ FISHSystem:
         #   Experiment_type: smfish-serial, smfish-barcoded, eel-barcoded
         Experiment_type_1: 
         #   Total number of rounds
-        Target_cycles_1: 16
+        Target_cycles_1: 
         #   True or False if a barcode is used
         Barcode_1: true
         #   Name of the detection chemisty, like: EELV2_core, EELV2_all, indirect_64
@@ -72,11 +72,11 @@ FISHSystem:
         #   Coordinates of the section. (use appropriate coordinate system for species)
         Position_1:
         #   Stiching type: small-beads, large-beads, both-beads, nuclei
-        Stitching_type_1: both-beads
+        Stitching_type_1: 
         #   Channel to be used for stitching
-        StitchingChannel_1: Europium
+        StitchingChannel_1: 
         #   Overlap percentage between fields of view
-        Overlapping_percentage_1: 8
+        Overlapping_percentage_1: 
         #   List of lists with coordinates of the roi's, like: [[0, 120], [121, 237]]
         roi_1: [[0, 0]]
         #   Name of analysis pipeline to use. Options: eel-human-GBM, eel-human-adult-brain, eel-human-embryo
@@ -178,52 +178,52 @@ FISHSystem:
         P1: 
         P2: 
         P3: 
-        P4: None
+        P4: 
         P5: 
-        P6: None
-        P7: None
-        P8: None
-        P9: None
-        P10: None
+        P6: 
+        P7: 
+        P8: 
+        P9: 
+        P10: 
         # Port 1-10 on acuator valve 2 are numberd 11-20.
-        P11: None
-        P12: None
-        P13: None
-        P14: None
-        P15: None
-        P16: None
-        P17: None
-        P18: None
-        P19: None
-        P20: None
+        P11: 
+        P12: 
+        P13: 
+        P14: 
+        P15: 
+        P16: 
+        P17: 
+        P18: 
+        P19: 
+        P20: 
     # Name of the buffer connected to the ports.
     # Use "Waste" for the connection to the waste, "Valve2" for the connection to Valve 2
     # and use HYBXX for the hybridization mixes where XX are a number, like HYB05 or HYB10.
     Ports:
         # Buffer connected to the Syringe pump
-        RunningBuffer: SSC2X
+        RunningBuffer: 
         # Port 1-10 on acuator valve 1
-        P1: WB
-        P2: IB
-        P3: Waste
-        P4: Chamber1
-        P5: SB
-        P6: HYB11
-        P7: HYB12
-        P8: Valve2
-        P9: HYB13
-        P10: HYB14
+        P1: 
+        P2: 
+        P3: 
+        P4: 
+        P5: 
+        P6: 
+        P7: 
+        P8: 
+        P9: 
+        P10: 
         # Port 1-10 on acuator valve 2 are numberd 11-20
-        P11: HYB01
-        P12: HYB02
-        P13: HYB03
-        P14: HYB04
-        P15: HYB05
-        P16: HYB06
-        P17: HYB07
-        P18: HYB08
-        P19: HYB09
-        P20: HYB10
+        P11: 
+        P12: 
+        P13: 
+        P14: 
+        P15: 
+        P16: 
+        P17: 
+        P18: 
+        P19: 
+        P20: 
     # To which Hybridization in which chamber does the HYB X port belong
     # Use "C1" for Chamber1 and "C2" for Chamber2, then append a lower dash plus cycle number
     # Like: "C1_01" for Chamber1 cycle 1 or "C2_14" for Chamber2 cycle 14
@@ -232,14 +232,14 @@ FISHSystem:
     # "C2_14_B" for Chamber 2, cycle 14, hybridization 2 (detection probes)
     Hybmix:
         # Port 1-10 on acuator valve 1
-        P1: #WB
-        P2: #IB
-        P3: #Waste
-        P4: #Chamber1
-        P5: #SB
+        P1: 
+        P2: 
+        P3: 
+        P4:
+        P5:
         P6:
         P7:
-        P8: #PORT TO VALVE 2
+        P8: 
         P9:
         P10:
         # Port 1-10 on acuator valve 2 are numberd 11-20.
@@ -262,178 +262,178 @@ FISHSystem:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-1
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-1
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization02:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-2
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-2
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization03:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-3
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-3
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization04:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-4
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-4
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization05:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-5
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-5
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization06:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-6
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-6
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization07:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-7
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-7
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization08:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-8
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-8
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization09:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-9
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-9
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization10:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-10
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-10
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization11:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-11
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-11
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization12:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-12
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-12
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization13:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-13
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-13
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization14:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-14
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-14
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization15:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-15
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-15
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization16:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3: EELCy3-16
+                Cy3: 
                 TxRed:
-                Cy5: EEL647-16
+                Cy5: 
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: Europium
+                Europium: 
             Hybridization17:
                 DAPI:
                 Atto425:
@@ -940,14 +940,14 @@ FISHSystem:
     Machine_identification:
         CavroXE1000: #not needed
         CavroXCalibur: #not needed
-        MXValve1: A105XW1IA
-        MXValve2: AI040PQVA
+        MXValve1: 
+        MXValve2: 
         ThermoCube1:
         ThermoCube2:
         Oasis1:
         Oasis2:
         YoctoThermistor:
-        TC720: A505CAYZA
+        TC720: 
     #If the identifier can not be found, you can use a fixed USB port.
     #Find the device address using the "find_address()" function and put it below.
     #On Windows it is formatted as: "COMX" where X is a number.
@@ -967,9 +967,9 @@ FISHSystem:
     #Pushbullet access tokens used for sending push messages to the user.
     #Make an account on: https://www.pushbullet.com/, goto settings, create and add.
     Operator_address:
-        lars:
-        alejandro:
-        simone:
+        operator1:
+        operator2:
+        operator3:
         operator4:
         operator5:
         operator6:
@@ -984,43 +984,43 @@ FISHSystem:
     # Chamber without the tubes being filled with valuable Hyb mix.
     Padding:
         # Volume to the degasser
-        Degass: 200
+        Degass: 
         # Port 1-10 on valve 1
-        P1: 200
-        P2: 200
+        P1: 
+        P2: 
         P3:
-        P4: 897
-        P5: 350
-        P6: 670
-        P7: 670
+        P4: 
+        P5: 
+        P6: 
+        P7: 
         P8:
-        P9: 670
-        P10: 670
+        P9: 
+        P10: 
         # Port 1-10 on valve 2 are numberd 11-20. 
         # Measure full volume from the end of the recervoir on Valve1 to the target
-        P11: 970
-        P12: 970
-        P13: 970
-        P14: 970
-        P15: 970
-        P16: 970
-        P17: 970
-        P18: 970
-        P19: 970
-        P20: 970
+        P11: 
+        P12: 
+        P13: 
+        P14: 
+        P15: 
+        P16: 
+        P17: 
+        P18: 
+        P19: 
+        P20: 
     # Volume in ul below which the system will notifiy the user. 
     # If a connected buffer gets below the specified volume it will send a push message to the operator,
     # everytime the system checks for the buffer volumes.
     # For the "Waste", a message will be send if the volume is above the specified value.
     #
     Alert_volume:
-        RunningBuffer: 100000
+        RunningBuffer: 
         # Port 1-10 on valve 1
-        P1: 10000
-        P2: 1200
-        P3: 4500000
+        P1: 
+        P2: 
+        P3: 
         P4:
-        P5: 2000
+        P5: 
         P6:
         P7:
         P8:
@@ -1037,4 +1037,4 @@ FISHSystem:
         P18:
         P19:
         P20:
-        Disk: 0.9
+        Disk:
