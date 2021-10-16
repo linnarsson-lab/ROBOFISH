@@ -1,6 +1,8 @@
 # ROBOFISH
 Code and installation instructions for the ROBOFISH system. Which is a fully automated, liquid-handling, temperatrue control machine that can be integrated with imaging for automated (cyclic) staining protocols of biological samples.
 
+![image info](./Images/ROBOFISH_logo.png "ROBOFISH simplified schematic")
+
 # Publication
 The ROBOFISH system was published as part of the EEL method: [link]()  UPDATE LINK!!!!!
 Please cite this paper when using the ROBOFISH system, thank you!
