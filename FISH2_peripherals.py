@@ -217,15 +217,8 @@ def yamlUpdate(filepath, new, file_extension=None):
     `file_extension`(str):Optional file extension for new file.
     
     """
-    print('got here')
-    yaml = ruamel.yaml.YAML()
-    yaml.preserve_quotes = True
-    yaml.indent(mapping=4)
-
-    #with open(filepath, "r") as yaml_file:
-    #    config, ind, bsi = load_yaml_guess_indent(yaml_file)
     with open(filepath, "r") as yaml_file:
-        config = yaml.load(yaml_file)
+        config, ind, bsi = load_yaml_guess_indent(yaml_file)
     
     #use 'updateDict' function that can update one value in a nested dict.
     updateDict(config, new)
@@ -236,11 +229,9 @@ def yamlUpdate(filepath, new, file_extension=None):
     else:
         new_name = filepath
         
-    #with open(new_name, 'w') as updated_yaml_file:
-    #    ruamel.yaml.round_trip_dump(config, updated_yaml_file, 
-    #                                indent=ind, block_seq_indent=bsi)
     with open(new_name, 'w') as updated_yaml_file:
-        yaml.dump(config, updated_yaml_file)
+        ruamel.yaml.round_trip_dump(config ,updated_yaml_file, 
+                                    indent=ind, block_seq_indent=bsi)
 
 def getFISHSystemMetadata(filename, table=None):
     """
@@ -395,6 +386,7 @@ def newFISHdb(db_name):
                             Probe_FASTA_TxRed_1 TEXT,
                             Probe_FASTA_Cy5_1 TEXT,
                             Probe_FASTA_Cy7_1 TEXT,
+                            Probe_FASTA_Europium_1 TEXT,
                             Codebook_DAPI_1 TEXT,
                             Codebook_Atto425_1 TEXT,
                             Codebook_FITC_1 TEXT,
@@ -402,6 +394,7 @@ def newFISHdb(db_name):
                             Codebook_TxRed_1 TEXT,
                             Codebook_Cy5_1 TEXT,
                             Codebook_Cy7_1 TEXT,
+                            Codebook_Europium_1 TEXT,
                             Multicolor_barcode_1 TEXT,
                             Barcode_length_1 INTEGER,
                             Species_1 TEXT,
@@ -437,6 +430,7 @@ def newFISHdb(db_name):
                             Probe_FASTA_TxRed_2 TEXT,
                             Probe_FASTA_Cy5_2 TEXT,
                             Probe_FASTA_Cy7_2 TEXT,
+                            Probe_FASTA_Europium_2 TEXT,
                             Codebook_DAPI_2 TEXT,
                             Codebook_Atto425_2 TEXT,
                             Codebook_FITC_2 TEXT,
@@ -444,6 +438,7 @@ def newFISHdb(db_name):
                             Codebook_TxRed_2 TEXT,
                             Codebook_Cy5_2 TEXT,
                             Codebook_Cy7_2 TEXT,
+                            Codebook_Europium_2 TEXT,
                             Multicolor_barcode_2 TEXT,
                             Barcode_length_2 INTEGER,
                             Species_2 TEXT,

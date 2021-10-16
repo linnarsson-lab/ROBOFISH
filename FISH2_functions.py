@@ -408,13 +408,11 @@ class FISH2():
         Checks if any of the flags are up and if so copies the values into memory.
         Flags indicate new values.
         Makes global dictionaries: Parameters, Buffers, Targets, Ports & Hybmix
-
         Input:
         `db_path`(str): Full path to database.
         `ignore_flags`(bool): Option to ignore the flags and update everything.
                               If False, it only updates the Tables with new information.
                               Pause flag is not ignored.
-
         """
         #Check if experiment is paused
         count = 0
@@ -496,10 +494,8 @@ class FISH2():
         and add the identifier to the user FISH_System_datafil.yaml
         Returns:
         `device_COM_port` (dict): Dictionary with name of device and COM port. 
-
         Devices need to be added to the database using the FISH2_user_program and
         the FISH_system_datafile.yaml
-
         """
         device_COM_port = {
             'CavroXE1000': None,
@@ -587,7 +583,6 @@ class FISH2():
         `volume`(int): Volume to test as padding volume
         `air_port`(str): Name of port that is disconnected. Like: 'P3'
         `target`(str): Target to push to. Like: 'Chamber1' or 'P2'
-
         """
         input('This function will push a tiny air bubble to the hybridization chamber, if it just reaches it you have found the padding volume. Press Enter to continue...')
         self.connectPort(air_port)
@@ -608,7 +603,6 @@ class FISH2():
         Input:
         `volume`(int): Volume to test as padding volume
         `hybmix`(str): Hybmix to aspirate. Like: 'HYB01'
-
         """
         input('Place some liquid (use same viscosity as real experiment) in the system. This function will aspirate the volume and you need to see if the liquid reaches the reservoir tube. The best is if it just reaches the reservoir. Press Enter to continue...')
         self.connectPort(hybmix)
@@ -634,7 +628,6 @@ class FISH2():
         `volume`(int): Volume to test as padding volume
         `buffer_intrest`(str): Name of port of interest
         `air_port`(str): Port connected to air
-
         """
         print('Make sure the tube of the buffer of interest is filled with air.')
         input('Press Enter to start and aspirate {}ul of the buffer. Please look at the buffer and note where it ends up. Press Enter to continue...'.format(volume))
@@ -657,7 +650,6 @@ class FISH2():
         Input:
         `short_message`(str): Subject of message.
         `long_message`(str): Body of message.
-
         """
         sm = '{}: {}'.format(self.system_name, short_message)
         perif.send_push(self.Operator_address, operator = self.Parameters['Operator'],
@@ -673,7 +665,6 @@ class FISH2():
         It will notify the Operator if any of the buffers need a refill
         The minimal volumes can be defined with the user program in the 
         Alert_volume table. Waste is checked if it is too full.
-
         """
         #Check current volumes
         almost_empty = []
@@ -745,7 +736,6 @@ class FISH2():
             the buffer name as in the 'Ports' dictionary..
         `port_number`(bool): If False, returns the port code P1-P20.
             If True, returns the port number 1-20.
-
         """
         #Check input
         if target not in self.Ports.keys() and target not in self.Ports.values(): 
@@ -770,7 +760,6 @@ class FISH2():
         Input:
         `target`(str): Either the port number (P1-P20) or
             the buffer name as in the 'Ports' dictionary.
-
         """
         #Get the number of the port
         port = self.getPort(target, port_number=True)
@@ -798,7 +787,6 @@ class FISH2():
         `volume`(int): Volume to aspirate.
         `bubble`(bool): If a bubble of 30ul should be aspirated. Default = False
         `bubble_volume`(int): Volume of bubble. Default 30ul.
-
         """
         if bubble == True:
             self.airBubble(bubble_volume = bubble_volume)
@@ -814,7 +802,6 @@ class FISH2():
         Input:
         `target`(str): target buffer/port as in the 'ports' dictionary.
         `volume`(int): volume in ul to dispense.
-
         """
         self.connectPort(target)
         self.pump.dispense(volume_ul = volume, to_port= 'output', execute=True)       
@@ -827,7 +814,6 @@ class FISH2():
         `target`(int): Target to dispense to, eiter Buffer name as in Ports,
             or the port number. 
         Returns the padding volume.
-
         """
         target = self.getPort(target)
         volume = self.Padding[self.getPort(target)]
@@ -842,7 +828,6 @@ class FISH2():
         `bubble_vollume`(int): size of the bubble in ul. Default = 30.
                                volume should be between 10 and 50 ul.
         10ul might be unstable. 30 works consistent
-
         """
         #in the 1/8"OD, 0.62" tube of the reservoir, 1mm holds 1.94778 ul
         if not 10 <= bubble_volume <= 50:
@@ -863,7 +848,6 @@ class FISH2():
         Input:
         `replace_volume`(int): Volume to replace in reservoir. Default 200ul.
         `update_buffer`(bool): If true it will update the RunningBuffer  and Waste volumes.
-
         """
         max_volume = self.pump.syringe_ul
         if not 0 <= replace_volume <= (max_volume + 1):
@@ -994,7 +978,6 @@ class FISH2():
         `volume`(int): volume to extract and dispense.
         `target`(str): target port as in the 'ports' dictionary.
         `padding`(bool): True if padding needs to be used to reach target.
-
         """
         #Check if the max volume of the syringe is not exceeded.
         max_volume = self.pump.syringe_ul
@@ -1048,7 +1031,6 @@ class FISH2():
             wash of a series to completely exchange the previous buffer.
         `speed`(int): dispense speed. Unit depends on the specific pump used
             refer the pump specific speeds.
-
         """
         #Check if the max volume of the syringe is not exceeded.
         max_volume = self.pump.syringe_ul
@@ -1137,7 +1119,6 @@ class FISH2():
             the sample. 
         `wash`(bool): Wash the hybmix tubes. Default True
         `wash_cycles`(int): Number of times to wash the hybmix tubes.
-
         """
         #"HYB" is the hybridization buffer without probes in the big container.
         #"Hybmix" is the hybridization buffer with the probes, in the eppendorf tubes.
@@ -1241,7 +1222,9 @@ class FISH2():
         self.extractBuffer(Hybmix_port, Hybmix_vol)
 
         #Creates a padding volume in syringe to bridge the tubes between reservoir and target
+        self.pump.setSpeed(cached_speed, execute=True)
         pad = self.padding(target)
+        self.pump.setSpeed(slow_speed, execute=True)
 
         #Dispense:
             #Hybmix_probes
@@ -1286,7 +1269,6 @@ class FISH2():
         `port`(str): Port to prime
         `update`(bool): Update the buffer volume. 
             Select True when priming. Select False when cleaning the tubes.
-
         """
         #Prime RunningBuffer
         if port == 'RunningBuffer':
@@ -1316,7 +1298,6 @@ class FISH2():
                         guide you through the priming of the Degassi.
                         If False it will presume that everything is filled with 
                         RunningBuffer except for the hyb chambers.
-
         """
         self.L.logger.info('Priming system')
         master = Tk()
@@ -1364,7 +1345,6 @@ class FISH2():
         `port`(str): Port number to wash.
         `cycles`(int): Number of wash cycles. Default 5.
         `wash_volume`(int): Extra volume to wash the Eppendorff tube with.
-
         """
         target = self.getPort(port)
         #Remove hybmix remainder from tubes
@@ -1401,7 +1381,6 @@ class FISH2():
             to wash. Default=5
         `hybmix_wash_volume`(int): Specific for washing hybmix tubes. Extra volume 
             to wash the Eppendorff tube with. Default=200
-
         """
         self.L.logger.info('Cleaning System.')
         print('Pull up all the needles so that they are not in contact with the liquids.')
@@ -1480,7 +1459,6 @@ class FISH2():
         Input:
         `temperature`(int/float): Desired temperature.
         `chamber`(str): "Chamber1"(Left) or "Chamber2"(right).
-
         """
         if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices or 'Oasis1' in self.devices or 'Oasis2' in self.devices:
             if chamber.lower() == 'chamber1':
@@ -1511,7 +1489,6 @@ class FISH2():
             is used.
         `step`(int/float): The step in degree Celsius. Absolute number.
         `step_time`(int/float): Sleep time in seconds untill the next step.
-
         """
         step = abs(step)
         if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices or 'Oasis1' in self.devices or 'Oasis2' in self.devices:
@@ -1546,7 +1523,7 @@ class FISH2():
         self.L.logger.info('    {} ramped to {} degree Celsius with {}C per step of {}seconds.'.format(chamber, temperature, step, step_time))
 
 
-    def waitTemp(self, target_temp, chamber, error=1, array_size=5, sd=0.005, verbose = False):
+    def waitTemp(self, target_temp, chamber, error=1, array_size=5, sd=0.02, verbose = False):
         """
         Wait until chamber has reached target temperature.
         Input:
@@ -1556,10 +1533,9 @@ class FISH2():
         `array_size`(int): Size of array to check if stable temperature plateau is
             reached. Default = 5
         `sd`(float): Standard deviation, if sd of temperature array drops below 
-            threshold value, function returns. Default = 0.005
+            threshold value, function returns. Default = 0.02
         `verbose`(bool): If True it prints the temperature values every second
             while waiting for set temperature.
-
         """
         bufferT = deque(maxlen=array_size)
         counter = 0
@@ -1710,7 +1686,7 @@ class FISH2():
 
     def check_error_TC1(self, verbose=False):
         'Check errors on ThermoCube1.'
-        if self.Machines['ThermoCube1'] == 1 or self.Machines['Oasis'] == 1:
+        if self.Machines['ThermoCube1'] == 1 or self.Machines['Oasis1'] == 1:
             try:
                 TC_1_error = self.TC_1.check_error(verbose=False, raise_error=False)
             except Exception as e:
@@ -1723,7 +1699,7 @@ class FISH2():
 
     def check_error_TC2(self, verbose=False):
         'Check errors on ThermoCube2.'
-        if self.Machines['ThermoCube2'] == 1 or self.Machines['Oasis'] == 1:
+        if self.Machines['ThermoCube2'] == 1 or self.Machines['Oasis2'] == 1:
             try:
                 TC_2_error = self.TC_2.check_error(verbose=False, raise_error=False)
             except Exception as e:
@@ -1814,7 +1790,6 @@ class FISH2():
     def check_error_disk(self):
         """
         Check disk usage to warn user if it is too high.
-
         """
         drive = self.imaging_output_folder[:2] #Only on windows??
         total, used, free = shutil.disk_usage(drive)
@@ -1834,7 +1809,6 @@ class FISH2():
         `number_of_messages`(int): Number of messages that are sent every period 
             that an error is detected. Default to 10. This is a lot but it will 
             hopefully wake up the user.
-
         """
         #Update parameters
         self.updateExperimentalParameters(self.db_path, ignore_flags=True)
@@ -1865,9 +1839,15 @@ class FISH2():
         #Warn user by sending a number of messages
         if errors != []:
             self.found_error = True
-            for i in range(number_of_messages):
+            
+            #If only the disk has an error do not send a million messages
+            if len(errors) == 1 and errors[0][1].startswith('Disk usage high'):
                 self.push(short_message = 'ERROR on {}'.format(self.Parameters['Machine']),
                             long_message = '\n\nWarning: '.join(er[1] for er in errors if er[0]==False))
+            else:
+                for i in range(number_of_messages):
+                    self.push(short_message = 'ERROR on {}'.format(self.Parameters['Machine']),
+                                long_message = '\n\nWarning: '.join(er[1] for er in errors if er[0]==False))
         else:
             if self.found_error == True:
                 self.L.logger.info('Issue resolved, no errors detected anymore.')
@@ -1957,7 +1937,6 @@ class FISH2():
         experiments. Keyboard interupt to stop it. To run individual experiments
         set remove_experiment to False and the scheduler will go into save_sleep
         when the experiment is done. 
-
         Input:
         `function1`(function): Function for the FIRST part of the experiment.
             Usually the first round of the experiment is different because no
@@ -1979,7 +1958,6 @@ class FISH2():
             Practical when experiments are standardized and only one
             experiment is run at a time.
         `log_info_file`(bool): If true it logs all info in the info file. 
-
         Restart functionalities:
         Use these parameters when you had to restart the scheduler.
         `current_1`(int): Current cycle of Chamber1. Use this if you want to
@@ -1992,7 +1970,6 @@ class FISH2():
             So if you want to do round 10, pass 9 to current_2.
         `start_with`(int): Number of chamber to start with first. So 1 for
             Chamber1 and 2 for Chamber2.
-
         """
 
         #######################################################
@@ -2060,22 +2037,30 @@ class FISH2():
                 'Strain': self.Parameters['Strain_{}'.format(cur_stain)],
                 'Age': self.Parameters['Age_{}'.format(cur_stain)],
                 'Tissue': self.Parameters['Tissue_{}'.format(cur_stain)],
-                'Orrientation': self.Parameters['Orrientation_{}'.format(cur_stain)],
+                'Orientation': self.Parameters['Orientation_{}'.format(cur_stain)],
                 'RegionImaged': self.Parameters['RegionImaged_{}'.format(cur_stain)],
                 'SectionID': self.Parameters['SectionID_{}'.format(cur_stain)],
                 'Position': self.Parameters['Position_{}'.format(cur_stain)],
                 'Experiment_type': self.Parameters['Experiment_type_{}'.format(cur_stain)],
                 'Chemistry': self.Parameters['Chemistry_{}'.format(cur_stain)],
-                'Probe_FASTA_name': self.Parameters['Probe_FASTA_name_{}'.format(cur_stain)],
+                'Probe_FASTA': {'DAPI': self.Parameters['Probe_FASTA_DAPI_{}'.format(cur_stain)],
+                                'Atto425': self.Parameters['Probe_FASTA_Atto425_{}'.format(cur_stain)],
+                                'FITC': self.Parameters['Probe_FASTA_FITC_{}'.format(cur_stain)],
+                                'Cy3': self.Parameters['Probe_FASTA_Cy3_{}'.format(cur_stain)],
+                                'TxRed': self.Parameters['Probe_FASTA_TxRed_{}'.format(cur_stain)],
+                                'Cy5': self.Parameters['Probe_FASTA_Cy5_{}'.format(cur_stain)],
+                                'Cy7': self.Parameters['Probe_FASTA_Cy7_{}'.format(cur_stain)],
+                                'Europium': self.Parameters['Probe_FASTA_Europium_{}'.format(cur_stain)]},
                 'Barcode': self.Parameters['Barcode_{}'.format(cur_stain)],
                 'Barcode_length': self.Parameters['Barcode_length_{}'.format(cur_stain)],
-                'Codebook_DAPI': self.Parameters['Codebook_DAPI_{}'.format(cur_stain)],
-                'Codebook_Atto425': self.Parameters['Codebook_Atto425_{}'.format(cur_stain)],
-                'Codebook_FITC': self.Parameters['Codebook_FITC_{}'.format(cur_stain)],
-                'Codebook_Cy3': self.Parameters['Codebook_Cy3_{}'.format(cur_stain)],
-                'Codebook_TxRed': self.Parameters['Codebook_TxRed_{}'.format(cur_stain)],
-                'Codebook_Cy5': self.Parameters['Codebook_Cy5_{}'.format(cur_stain)],
-                'Codebook_Cy7': self.Parameters['Codebook_Cy7_{}'.format(cur_stain)],
+                'Codebooks' : {'DAPI': self.Parameters['Codebook_DAPI_{}'.format(cur_stain)],
+                               'Atto425': self.Parameters['Codebook_Atto425_{}'.format(cur_stain)],
+                               'FITC': self.Parameters['Codebook_FITC_{}'.format(cur_stain)],
+                               'Cy3': self.Parameters['Codebook_Cy3_{}'.format(cur_stain)],
+                               'TxRed': self.Parameters['Codebook_TxRed_{}'.format(cur_stain)],
+                               'Cy5': self.Parameters['Codebook_Cy5_{}'.format(cur_stain)],
+                               'Cy7': self.Parameters['Codebook_Cy7_{}'.format(cur_stain)],
+                               'Europium': self.Parameters['Codebook_Europium_{}'.format(cur_stain)]},
                 'Multicolor_barcode': self.Parameters['Multicolor_barcode_{}'.format(cur_stain)],
                 'Stitching_type': self.Parameters['Stitching_type_{}'.format(cur_stain)],
                 'StitchingChannel': self.Parameters['StitchingChannel_{}'.format(cur_stain)],
@@ -2111,19 +2096,32 @@ class FISH2():
             Input:
             `cur_stain`(int): Number of the chamber currently staining.
             `other`(int): Number of the other chamber
-
             """
-            fname = '{}/{}_config.yaml'.format(self.imaging_output_folder, cur_exp['EXP_name_{}'.format(cur_stain)])
-            params = perif.getFISHSystemMetadata('FISH_System_datafile.yaml', table='Parameters')
+            fname = '{}\\{}_config.yaml'.format(self.imaging_output_folder, cur_exp['EXP_name_{}'.format(cur_stain)])
+            #params = perif.getFISHSystemMetadata('FISH_System_datafile.yaml', table='Parameters')
             #Select only current experiment.
             params = {}
+            codebooks = {}
+            probe_sets = {}
             for k,i in self.Parameters.items():
                 if k.endswith('_{}'.format(cur_stain)):
-                    k_short = k[:-2]
-                    params[k_short] = i
+
+                    if k.startswith('Codebook_'):
+                        k_short = k[:-2]
+                        codebooks[k_short] = i
+                    elif k.startswith('Probe_FASTA_'):
+                        k_short = k[:-2]
+                        probe_sets[k_short] = i
+                    else:
+                        k_short = k[:-2]
+                        params[k_short] = i
+
                 #Parameters without camber specific ending
                 if not k.endswith('_{}'.format(other)) and not k.endswith('_{}'.format(cur_stain)):
                     params[k] = i
+
+            params['Codebooks'] = codebooks
+            params['Probe_FASTA'] = probe_sets
 
             #Dump params in new .yaml file.
             perif.yamlMake(fname, params)
@@ -2361,4 +2359,4 @@ class FISH2():
                 #FLIP the conditions of the 2 chambers
                 cur_exp['Current_staining'] = other
                 cur_stain = cur_exp['Current_staining']
-                other = -cur_stain + 3  #Reverse 1-->2   2-->1
+                other = -cur_stain + 3  #Reverse 1-->2  >

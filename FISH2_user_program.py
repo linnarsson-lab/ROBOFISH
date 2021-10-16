@@ -124,7 +124,3 @@ while True:
         perif.removeFlagDB(db_path, 'New_EXP_flag_{}'.format(chamber))
 
     print('#'*80)
-
-
-
-

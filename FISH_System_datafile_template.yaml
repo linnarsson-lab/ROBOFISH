@@ -2,23 +2,23 @@
 # Make sure to always put a space between the colon and the value!
 FISHSystem:
     Parameters:
-       #   Operator running the experiment. Same as name linked to Pushbulet code, lower case
+        #   Operator running the experiment. Same as name linked to Pushbulet code, lower case
         Operator: 
         #   Machine the experiment is run on: ROBOFISH1, ROBOFISH2 or NOT-DEFINED
-        Machine: 
+        Machine: ROBOFISH
         ########## EXPERIMENT 1 ##########
         #   Experiment name: Initials with date, like: LBEXP20181220_1
-        EXP_name_1: 
+        EXP_name_1: test
         #   Short description of the Experiment
         Description_1:
         #   Link to the protocol file on Protocols.io
-        Protocols_io_1: 
+        Protocols_io_1:
         #   YYYYMMDD
-        Start_date_1: 
+        Start_date_1:
         #   Chamber1 or Chamber2
-        Chamber_EXP_1: 
+        Chamber_EXP_1: Chamber1
         #   First Hybridization time in hours (encoding probes)
-        Hyb_time_1_A:
+        Hyb_time_1_A: 0.16
         #   Second Hybridization time in hours (amplifier probes)
         Hyb_time_1_B:
         #   Third Hybridization time in hours (detection probes)
@@ -26,9 +26,9 @@ FISHSystem:
         #   Experiment_type: smfish-serial, smfish-barcoded, eel-barcoded
         Experiment_type_1: 
         #   Total number of rounds
-        Target_cycles_1:
+        Target_cycles_1: 16
         #   True or False if a barcode is used
-        Barcode_1: 
+        Barcode_1: true
         #   Name of the detection chemisty, like: EELV2_core, EELV2_all, indirect_64
         Chemistry_1: 
         #   Name of the codebooks
@@ -37,14 +37,22 @@ FISHSystem:
         Codebook_FITC_1:
         Codebook_Cy3_1:
         Codebook_TxRed_1:
-        Codebook_Cy5_1:
+        Codebook_Cy5_1: 
         Codebook_Cy7_1:
+        Codebook_Europium_1:
         #   True if there are multicolor barcodes
-        Multicolor_barcode_1: 
+        Multicolor_barcode_1: false
         #   Name of the FASTA file with the probe sequences
-        Probe_FASTA_name_1: 
+        Probe_FASTA_DAPI_1:
+        Probe_FASTA_Atto425_1:
+        Probe_FASTA_FITC_1:
+        Probe_FASTA_Cy3_1:
+        Probe_FASTA_TxRed_1:
+        Probe_FASTA_Cy5_1:
+        Probe_FASTA_Cy7_1:
+        Probe_FASTA_Europium_1:
         #   Number of bits in the barcode
-        Barcode_length_1: 
+        Barcode_length_1: 16
         #   Species:
         Species_1: 
         #   Strain of the animal
@@ -54,25 +62,25 @@ FISHSystem:
         #   Age of sample. Use letter indication for age system. Like: e for embryonic or ga for gestational age
         Age_1:
         #   Tissue
-        Tissue_1: 
-        #   Section orrientation
-        Orrientation_1:
+        Tissue_1:
+        #   Section orientation
+        Orientation_1:
         #   Region imaged
-        RegionImaged_1: 
+        RegionImaged_1:
         #   Section ID
         SectionID_1:
         #   Coordinates of the section. (use appropriate coordinate system for species)
         Position_1:
         #   Stiching type: small-beads, large-beads, both-beads, nuclei
-        Stitching_type_1:
+        Stitching_type_1: both-beads
         #   Channel to be used for stitching
-        StitchingChannel_1: 
+        StitchingChannel_1: Europium
         #   Overlap percentage between fields of view
-        Overlapping_percentage_1:
+        Overlapping_percentage_1: 8
         #   List of lists with coordinates of the roi's, like: [[0, 120], [121, 237]]
         roi_1: [[0, 0]]
         #   Name of analysis pipeline to use. Options: eel-human-GBM, eel-human-adult-brain, eel-human-embryo
-        Pipeline_1: 
+        Pipeline_1:
         ########## EXPERIMENT 2 ##########
         #   Experiment name: Initials with date, like: LBEXP20181220_Mouse_2
         EXP_name_2:
@@ -90,13 +98,13 @@ FISHSystem:
         Hyb_time_2_B:
         #   Third Hybridization time in hours (detection probes)
         Hyb_time_2_C:
-        #   Experiment_type: smfish-serial, smfish-barcoded, eel-barcoded
+        #   Experiment_type: smfish-serial, smfish-barcoded
         Experiment_type_2:
         #   Total number of rounds
         Target_cycles_2:
         #   True or False if a barcode is used
         Barcode_2:
-        #   Name of the detection chemisty, like: EELV2_core, EELV2_all, indirect_64
+        #   Name of the detection chemisty, like:
         Chemistry_2:
         #   Name of the codebooks
         Codebook_DAPI_2:
@@ -106,10 +114,18 @@ FISHSystem:
         Codebook_TxRed_2:
         Codebook_Cy5_2:
         Codebook_Cy7_2:
+        Codebook_Europium_2:
         #   True if there are multicolor barcodes
         Multicolor_barcode_2: false
         #   Name of the FASTA file with the probe sequences
-        Probe_FASTA_name_2:
+        Probe_FASTA_DAPI_2:
+        Probe_FASTA_Atto425_2:
+        Probe_FASTA_FITC_2:
+        Probe_FASTA_Cy3_2:
+        Probe_FASTA_TxRed_2:
+        Probe_FASTA_Cy5_2:
+        Probe_FASTA_Cy7_2:
+        Probe_FASTA_Europium_2:
         #   Number of bits in the barcode
         Barcode_length_2:
         #   Species:
@@ -122,8 +138,8 @@ FISHSystem:
         Age_2:
         #   Tissue
         Tissue_2:
-        #   Section orrientation
-        Orrientation_2:
+        #   Section orientation
+        Orientation_2:
         #   Region imaged
         RegionImaged_2:
         #   Section ID
@@ -138,11 +154,11 @@ FISHSystem:
         Overlapping_percentage_2:
         #   List of lists with coordinates of the roi's, like: [[1, 120], [121, 237]]
         roi_2: [[0, 0]]
-        #   Name of analysis pipeline to use. Options: eel-human-GBM, eel-human-adult-brain, eel-human-embryo
+        #   Name of analysis pipeline to use.
         Pipeline_2:
         ########## OTHER ##########
         #   Name of executing protocol for documentation
-        Program: 
+        Program:
         #   Volume of hybmix in ul
         Hybmix_volume: 500
         #   Temperature used for staining and washing
@@ -157,13 +173,13 @@ FISHSystem:
         Imaging_temperature: 20
     # Volume of all buffers in ul, Integer/float
     Volumes:
-        RunningBuffer: 0
+        RunningBuffer: 
         # Port 1-10 on acuator valve 1
-        P1: 0
-        P2: 0
-        P3: 0
+        P1: 
+        P2: 
+        P3: 
         P4: None
-        P5: 0
+        P5: 
         P6: None
         P7: None
         P8: None
@@ -246,178 +262,178 @@ FISHSystem:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-1
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-1
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization02:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-2
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-2
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization03:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-3
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-3
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization04:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-4
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-4
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization05:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-5
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-5
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization06:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-6
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-6
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization07:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-7
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-7
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization08:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-8
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-8
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization09:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-9
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-9
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization10:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-10
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-10
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization11:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-11
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-11
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization12:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-12
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-12
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization13:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-13
                 TxRed:
-                Cy5:
+                Cy5: EEL647-13
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization14:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-14
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-14
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization15:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-15
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-15
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization16:
                 DAPI:
                 Atto425:
                 FITC:
-                Cy3:
+                Cy3: EELCy3-16
                 TxRed:
-                Cy5: 
+                Cy5: EEL647-16
                 Cy7:
                 QDot:
                 BrightField:
-                Europium: 
+                Europium: Europium
             Hybridization17:
                 DAPI:
                 Atto425:
@@ -914,18 +930,22 @@ FISHSystem:
         Degassi: None
         ThermoCube1: 0
         ThermoCube2: 0
+        Oasis1: 0
+        Oasis2: 0
         YoctoThermistor: 0
         TC720: 1
     #Put the identifiers of each machine here. This will be used to find the USB port for each device.
     #Find the ports using the "find_address()" Function, then paste the device serial number here.
     #This is the safest method.
     Machine_identification:
-        CavroXE1000:
-        CavroXCalibur:
+        CavroXE1000: #not needed
+        CavroXCalibur: #not needed
         MXValve1: A105XW1IA
         MXValve2: AI040PQVA
         ThermoCube1:
         ThermoCube2:
+        Oasis1:
+        Oasis2:
         YoctoThermistor:
         TC720: A505CAYZA
     #If the identifier can not be found, you can use a fixed USB port.
@@ -940,15 +960,17 @@ FISHSystem:
         MXValve2:
         ThermoCube1:
         ThermoCube2:
+        Oasis1:
+        Oasis2:
         YoctoThermistor:
         TC720:
     #Pushbullet access tokens used for sending push messages to the user.
     #Make an account on: https://www.pushbullet.com/, goto settings, create and add.
     Operator_address:
-        lars: E8DH8OrSVwPHEEIuS3ZTqA3Rncbxhngt
-        alejandro: o.qZSjGbDPXw0qA7CdacTC469orPUHY0eN
-        simone: 0wjyZ0Ev509SVAtff4frXvDg3c3xQJ3Z
-        operator4: o.rE8ef5CpkSYlvRKfTcR6vQHDaWGbbFkw
+        lars:
+        alejandro:
+        simone:
+        operator4:
         operator5:
         operator6:
         operator7:
