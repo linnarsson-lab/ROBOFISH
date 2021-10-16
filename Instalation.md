@@ -20,6 +20,13 @@
 ### Get source
 - Clone or download this repository.
 
+# Machine configuration
+Depending on your configuration of the ROBOFISH system download the files of the follwing devices and place them in the ROBOFISH folder:
+- [ThermoCube](https://github.com/linnarsson-lab/ThermoCube) recirculating chiller.
+- [Oasis](https://github.com/linnarsson-lab/Oasis_chiller) recirculating chiller.
+- [TC-720](https://github.com/linnarsson-lab/Py_TC-720) temperature controller.
+- [Tecan syringe pump](https://github.com/benpruitt/tecancavro).
+
 ### Start user program
 The user program is the main interface for the user to give expermental parameters to the system.  
 With the user program you can open a text file (FISH2_System_datafile.yaml) that contains all metadata of the system and the experiments. This data is uploaded to a central database that the system can acces to perform the correct experiment.
@@ -59,7 +66,7 @@ There are two ways to tell the system how to communicate with the devices, eithe
 If you are using the FCS2 flow cell you need to connect the Yoctopuce Thermistor temperature sensor to measure the room temperature and chamber temperature.
 To set it up follow these steps:
 - Connect one of the supplied Thermistors to port 1.
-- Connect the FCS2 thermistor to the Yoctopuce Thermistor with a electrical wire and two pins. Use the middle two slots on the FCS2.
+- Connect the FCS2 thermistor to the Yoctopuce Thermistor with an electrical wire and two pins. Use the middle two slots on the FCS2.
 - Connect the Yoctopuce Thermistor with a USB to USB micro cable to the computer. The lights should turn on now.
 - From the Yoctopuce website download the Python [libraries](https://www.yoctopuce.com/EN/libraries.php).
 - Coppy the following files to the ROBOFISH folder"
@@ -72,7 +79,7 @@ To set it up follow these steps:
 - Save the settings and then make sure the temperature readings are correct (double click on the Thermistor name in the main menue). If all works close the webbsite and the Virtual hub program.
 
 ### Pushbullet communication
-The system communicates with the user with push messages through the program Pushbullet. The system will update you about the status of the experiment and will let you know if any of the buffers are getting low. Furthermore, it will sound the alarm is something is wrong. You will need an account at Pushbullet to use this functionality. It is recommended to get a paid account. The free account only allowes an X ammount of messages to be sent. In normal operation this should be enough but in case there is something wrong the ROBOFISH system can send a lot of messages to alarm the user, maxing out the quota, so that you will not receive any messages. 
+The system communicates with the user with push messages through the program Pushbullet. The system will update you about the status of the experiment and will let you know if any of the buffers are running low. Furthermore, it will sound the alarm is something is wrong. You will need an account at Pushbullet to use this functionality. It is recommended to get a paid account. The free account only allowes an X ammount of messages to be sent. In normal operation this should be enough but in case there is something wrong the ROBOFISH system can send a lot of messages to alarm the user, maxing out the quota, so that you will not receive any messages. 
 - Go to the website of [Pushbullet](https://www.pushbullet.com/). 
 - Make an account.
 - Go to settings and create and acces token. This will be your address.
@@ -83,9 +90,9 @@ The system communicates with the user with push messages through the program Pus
 - In the popup window indicate that you updated the Operator_address. In this section you used the `part` updating method. This is a bit quicker than using `all` but there is a risk that you forget to click the tickboxes so that the data is not uploaded to the machine. 
 
 ### Configuring ports
-In the user programm select `all`. Go to the ports table and fill in the names of the buffers that are, or will be, connected. If you do not know that at this time it is no problem just leave it empty. However, you need to define the port connected to the `Waste` and `Valve2`. Valve1 is the valve that has its central port connected to the reservoir at its port are called P1 to P10. On the valve you will find numbers to figure our which port is which number. Valve2 has its middle port connected to Valve1 and its ports are called P11 to P20 in the program. 
+In the user programm select `all`. Go to the ports table and fill in the names of the buffers that are, or will be, connected. If you do not know that at this point, it is no problem just leave it empty. However, you need to define the port connected to the `Waste` and `Valve2`. Valve1 is the valve that has its central port connected to the reservoir at its port are called P1 to P10. On the valve you will find numbers to figure our which port is which number. Valve2 has its middle port connected to Valve1 and its ports are called P11 to P20 in the program. 
 - Fill in which port is connected to `Waste` and `Valve2`.
-- Fill in the names of the connected buffers and the name of the RunningBuffer. For instance, inour case the RunningBuffer is SSC 2X so we fill in `RunningBuffer: SSC2X`.
+- Fill in the names of the connected buffers and the name of the RunningBuffer. For instance, in our case the RunningBuffer is SSC 2X so we fill in `RunningBuffer: SSC2X`.
 - To connect flow cells add the names `Chamber1` and if applicable `Chamber2` to the ports.
 - To connect hybridization mixes the names should have the format `HYBXX` where `XX` is the number.   
 Continue with the next part.
@@ -95,7 +102,7 @@ For the buffer names you just added, fill in the volume of the connected buffer 
 Continue with the next part.
 
 ### Configuring alarm volumes.
-Scroll down in the info file untill you found the Alert_volumes table. This table contains volumes below or above which the system will warn the user. For instance if the waste container is full, meaning it is above the given alter volume, it will send a message to the user. Or if one of the buffers is running low it will send an alarm. Additionally it checks if there is enough disk space. For now, just add a volume for the connected buffers at 10% of the containers volume. Or at 90% of the waste container volume. Later you can fine tune these numbers.  
+Scroll down in the info file untill you found the Alert_volumes table. This table contains volumes below or above which the system will warn the user. For instance if the waste container is full, meaning it is above the given alter volume, it will send a message to the user. Or if one of the buffers is running low it will send an alarm. Additionally it checks if there is enough disk space. For now, just add a volume for the connected buffers at 10% of the containers volume. Or at 90% of the waste container volume. Later you can fine-tune these numbers depending on your protocol.  
 
 ### Configuring connected machines.
 In the machines table add a `1` for machines that are connected or a `0` for machines that are not connected. 
@@ -106,11 +113,11 @@ Save and close the Notepad. In the user program hit enter to save the data and c
 The next cell in the Jupyter lab notebook will contain the functions to initiate the system. First make sure all paths in this cell are correct.
 - Make sure the path to the database is correct. In your ROBOFISH folder a new folder should have been made called `FISH_database` containing the database: `FISH_System2_db.sqlite`. Add the path to this file in the Jupyter lab (Windows: right click, properties, Location). 
 - For the first run you can ignore the `start_imaging_file_path` and the `imaging_output folder`. Below are the explanations if you want to set them up.
-  - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a `0`. `0` means no sample to image. `1` means start imaging of the sample or sample number 1. Or another number if there are multiple samples.)
+  - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a `0`. `0` means no sample to image. `1` means start imaging of Chamber1, `2` means start imaging of Chamber2.)
   - For the `imaging_output_folder` specifiy the path were the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)`
 
 - The pump needs to know which side is the input port and which is the output port. At the moment this is hardcoded and needs to be changed manually. In the ROBOFISH folder open the `FISH2_functions.py` file, change it and save:
-  - For the Tecan Cavro XE1000 pump: In line 348 you can change the input port. The input port is the port that is connected to the RunningBuffer. If the Running buffer is connected left and the rescervoir right, set the `'in_port equal'` to `'lef'`, like: `self.pump.init(in_port='left', init_speed = 20)` If your ports are mirrored  set `in_port` equal to `'right'`.  
+  - For the Tecan Cavro XE1000 pump: In line 348 you can change the input port. The input port is the port that is connected to the RunningBuffer. If the Running buffer is connected left and the rescervoir right, set the `'in_port'` equal to `'lef'`, like: `self.pump.init(in_port='left', init_speed = 20)` If your ports are mirrored  set `in_port` equal to `'right'`.  
   - For the Tecan Cavro XCalibur pump: In line 372 set direction equal to `'Z'` if the RunningBuffer is connected to the left port and the reservoir to the the right, like: `direction='Z'`. If your ports are mirrored set `direction` equal to `'Y'`.
     
 - Now initiate the system by calling: `F2 = FISH2_functions.FISH2(db_path, imaging_output_folder, start_imaging_file_path, system_name='ROBOFISH')`
@@ -118,12 +125,12 @@ The next cell in the Jupyter lab notebook will contain the functions to initiate
 - If something goes wrong and you want to restart the initiation, you need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports will be dedicated already and can not be reassigned by the same python kernel. 
 
 ### Prime the system
-The reservoir needs to be filled with RunningBuffer for proper operation. There is a convenience function that guides you through all steps of the priming. Fill the RunningBuffer bottle with your buffer or water and then call the function with: `F2.primeSystem(system_dry = True)`, and follow the steps. At this point you only need to prime the RunningBuffer port and none of the other ports. 
+The reservoir needs to be filled with RunningBuffer for proper operation. There is a convenience function that guides you through all steps of the priming. Fill the RunningBuffer bottle with your buffer or water and then call the function with: `F2.primeSystem(system_dry = True)`. Prime all connected buffers by follow the steps.
 
 ### Find padding volumes
 The system needs to know the dead volumes between the valves, buffers and flow cell(s) to accurately dispence the liquids to a specifc location. Dead volumes are called Padding volume and there are 3 different functions for helping you to find the correct volumes: `F2.findPaddingVolumeChamber()` for finding the padding volume between Valve1 and the flow cell. `F2.findPaddingVolumeHYBmix()` For finding the dead volume between Valve1 and the hybridization mixes. And `F2.findPaddingVolumeBuffer()` for finding the padding volume between Valve1 and a connected buffer container.  
 For the hybridization mixes and buffers these functions just aspirate a user defined volume and the user needs to see if the liquid reaches the reservoir, and the function guides the user through this process. It is best if the liquid just enters it. To accurately determine the dead volume it is adviced to use a test liquid with matching viscosity to the actual liquid that is going to be used.  
-For the flow cells and degasser, an air bubble is dispenced and the user needs to see if this air bubble just reaches its destination. For this to work properly remove the bubble trap and connecte the tubbing with an IDEX PXXX connector. Additionally swich off the degasser. Afterwards, add the known dead volume of the bubble trap to the pading volume.  
+For the flow cells and degasser, an air bubble is dispenced and the user needs to see if this air bubble just reaches its destination. For this to work properly remove the bubble trap and connecte the tubbing with an IDEX P710 (or similar) connector. Additionally swich off the degasser. Afterwards, add the known dead volume of the bubble trap to the pading volume.  
 These functions need also one `air_port` this is a port that is not connected to anything so that the machine can aspirate air. Give it the port ID like: 'P3' for port 3.  
 For every port that is connected to something (Excluding Valve2 and Waste) start the respective function and fill in the found padding volume in the Pading table of te FISH_system_datafile through the user program. 
 
@@ -136,21 +143,21 @@ Open the file by entering `all` in the FISH2_user_program. When all data has bee
 
 ### Configure expperimental parameters
 In the `Parameters` table you will find space to fill in various parameters and metadata variables for the experiment. Below is a highlight of a couple of the most important parameters. Up to two flow cells are supported and the parameters for a respective flow cell are followd by and `_1` for Chamber1 or `_2` for Chamber2.
-- Operator: This is used to send messages to the user, and should match the items in `Operator_address`.
+- Operator: This is used to send messages to the user, and should match the items in `Operator_address` for instance; `operator3`.
 - EXP_name_X: For an experiment to get started by the ROBOFISH system it needs to have an experiment name.
 - There are various parameters that are needed to determine steps of the image anslysis pipeline. See the options in the comments of the datafile and the image analysis documentation.
 - `Hybmix_volume`: This is the volume used for hybridization. It also determines how much of the other buffers need to be despenced to the flow cell and is synonymous for the flow cell internal volume. It is advisable to have this volume slightly larger than the actual volume of the flow cell and when hybridization mixes are loaded into the system to put a little bit more in the eppendorf tube to prevent air bubbles. 
-- There are multiple temperature values for various parts of the protocol. In the ROBOFISH program these will be accessible from the F2.Parameters dictionary. 
+- There are multiple temperature values for various parts of the protocol. In the ROBOFISH program these will later be accessible from the F2.Parameters dictionary. 
 
 ### Configure volumes
-As discussed above, in the `Volumes` table the actual buffer volumes are tracked. When placing a new buffer in the system enter its volume here in microliter. When the datafile is opened through the user programm the volumes will be updated to the actual values. 
+As discussed above, in the `Volumes` table the actual buffer volumes are tracked. When placing a new buffer in the system enter its volume here in microliter. When the datafile is opened through the user programm the volumes will be updated to the actual current values. 
 
 ### Configure Hybridizaiton mixes
-In the `Hybmix` table you can tell the system to which ports a certain hybridization mix is connected. The names of the hybridization mixes should be of the format `<chamber>_<cycle>`. For instance if you put the hybridizaiton mix with probes for the first round of Chamber1 in the slot connected to port 1, you enter `C1_01` after P1. Or for chamber2 cycle 12 use the code `C2_12`.  
+In the `Hybmix` table you can tell the system to which ports a certain hybridization mix is connected. The names of the hybridization mixes should be of the format `<chamber>_<cycle>`. For instance if you put the hybridizaiton mix with probes for the first round of Chamber1 in the slot connected to port 1, you enter `C1_01` after P1. Or for Chamber2 cycle 12 use the code `C2_12`.  
 For more advanced hybridization schemes where first one or two amplifire probes are hybridized you can use the addition of `_A`,  `_B` or `_C` for up to 3 hybridizations in the same cycle. 
 
 ### Configure targets
-In the `Targets` table you can fill in the target that is imaged in a certain channel in a certain cycle. For each Chamber there is a list of 20 hybridization round with all the channels listed. After the channel write the target that is imaged in that channel in that cycle. For instance if you stained for Actin in the FITC channel in cycle 1, enter Actb after FITC in the Hybridization01 table. You can also enter a barcode bit number, Nuclei, PolyA, or beads.
+In the `Targets` table you can fill in the target that is imaged in a certain channel in a certain cycle. For each Chamber there is a list of 20 hybridization rounds with all the channels listed. After the channel write the target that is imaged in that channel in that cycle. For instance if you stained for Actin in the FITC channel in cycle 1, enter Actb after FITC in the Hybridization01 table. You can also enter a barcode bit number, Nuclei, PolyA, or beads.
 
 ## Configure the scheduler
 Once the parametrs are all filled in you can start the experiment. You do this by defining two functions and giving this to the scheduler. The first function should perform the first cycle of the experiment. The second function is a function that is repeated for all other cycles. Please see the  `XXXXXXXXXXXXXXXXXXXXX file with basic instructions` for an introduction on how to program your own protocol and execute it with the scheduler. Or run the EEL experiment by using the  `XXXXXXXXXXXXXXXXXXX EEL.ipynb` file. 
@@ -185,7 +192,7 @@ To match this round info file with a certain image, the Imaging job renames the 
 - Click New and add the copied path like: `C:\<User path to anaconda>\Anaconda3`.
 - Again add a new but now append `\Scripts` to the coppied path like: `C:\<User path to anaconda>\Anaconda3\Scripts`.
 - Click Ok on all windows.
-- To test if it worked, open a new Windows Command Prompt and type `python`. You should now see the python interpreter. 
+- To test if it worked, open a new Windows Command Prompt and type `python`. You should now see the python interpreter and Nis Elements should be able to run the Rename_info_file script. 
 
 # Hardware alternatives
 ### Other imaging software
