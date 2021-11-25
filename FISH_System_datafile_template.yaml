@@ -43,14 +43,14 @@ FISHSystem:
         #   True if there are multicolor barcodes
         Multicolor_barcode_1: false
         #   Name of the FASTA file with the probe sequences
-        Probe_FASTA_DAPI_1:
-        Probe_FASTA_Atto425_1:
-        Probe_FASTA_FITC_1:
-        Probe_FASTA_Cy3_1:
-        Probe_FASTA_TxRed_1:
-        Probe_FASTA_Cy5_1:
-        Probe_FASTA_Cy7_1:
-        Probe_FASTA_Europium_1:
+        Probes_FASTA_DAPI_1:
+        Probes_FASTA_Atto425_1:
+        Probes_FASTA_FITC_1:
+        Probes_FASTA_Cy3_1:
+        Probes_FASTA_TxRed_1:
+        Probes_FASTA_Cy5_1:
+        Probes_FASTA_Cy7_1:
+        Probes_FASTA_Europium_1:
         #   Number of bits in the barcode
         Barcode_length_1: 16
         #   Species:
@@ -118,14 +118,14 @@ FISHSystem:
         #   True if there are multicolor barcodes
         Multicolor_barcode_2: false
         #   Name of the FASTA file with the probe sequences
-        Probe_FASTA_DAPI_2:
-        Probe_FASTA_Atto425_2:
-        Probe_FASTA_FITC_2:
-        Probe_FASTA_Cy3_2:
-        Probe_FASTA_TxRed_2:
-        Probe_FASTA_Cy5_2:
-        Probe_FASTA_Cy7_2:
-        Probe_FASTA_Europium_2:
+        Probes_FASTA_DAPI_2:
+        Probes_FASTA_Atto425_2:
+        Probes_FASTA_FITC_2:
+        Probes_FASTA_Cy3_2:
+        Probes_FASTA_TxRed_2:
+        Probes_FASTA_Cy5_2:
+        Probes_FASTA_Cy7_2:
+        Probes_FASTA_Europium_2:
         #   Number of bits in the barcode
         Barcode_length_2:
         #   Species:
