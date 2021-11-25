@@ -2043,14 +2043,14 @@ class FISH2():
                 'Position': self.Parameters['Position_{}'.format(cur_stain)],
                 'Experiment_type': self.Parameters['Experiment_type_{}'.format(cur_stain)],
                 'Chemistry': self.Parameters['Chemistry_{}'.format(cur_stain)],
-                'Probe_FASTA': {'DAPI': self.Parameters['Probe_FASTA_DAPI_{}'.format(cur_stain)],
-                                'Atto425': self.Parameters['Probe_FASTA_Atto425_{}'.format(cur_stain)],
-                                'FITC': self.Parameters['Probe_FASTA_FITC_{}'.format(cur_stain)],
-                                'Cy3': self.Parameters['Probe_FASTA_Cy3_{}'.format(cur_stain)],
-                                'TxRed': self.Parameters['Probe_FASTA_TxRed_{}'.format(cur_stain)],
-                                'Cy5': self.Parameters['Probe_FASTA_Cy5_{}'.format(cur_stain)],
-                                'Cy7': self.Parameters['Probe_FASTA_Cy7_{}'.format(cur_stain)],
-                                'Europium': self.Parameters['Probe_FASTA_Europium_{}'.format(cur_stain)]},
+                'Probes_FASTA': {'DAPI': self.Parameters['Probes_FASTA_DAPI_{}'.format(cur_stain)],
+                                'Atto425': self.Parameters['Probes_FASTA_Atto425_{}'.format(cur_stain)],
+                                'FITC': self.Parameters['Probes_FASTA_FITC_{}'.format(cur_stain)],
+                                'Cy3': self.Parameters['Probes_FASTA_Cy3_{}'.format(cur_stain)],
+                                'TxRed': self.Parameters['Probes_FASTA_TxRed_{}'.format(cur_stain)],
+                                'Cy5': self.Parameters['Probes_FASTA_Cy5_{}'.format(cur_stain)],
+                                'Cy7': self.Parameters['Probes_FASTA_Cy7_{}'.format(cur_stain)],
+                                'Europium': self.Parameters['Probes_FASTA_Europium_{}'.format(cur_stain)]},
                 'Barcode': self.Parameters['Barcode_{}'.format(cur_stain)],
                 'Barcode_length': self.Parameters['Barcode_length_{}'.format(cur_stain)],
                 'Codebooks' : {'DAPI': self.Parameters['Codebook_DAPI_{}'.format(cur_stain)],
@@ -2089,6 +2089,7 @@ class FISH2():
             for k in cur_exp:
                 if k in self.Parameters:
                     cur_exp[k] = self.Parameters[k]
+
         
         def create_config_file(cur_stain, other):
             """
@@ -2109,7 +2110,7 @@ class FISH2():
                     if k.startswith('Codebook_'):
                         k_short = k[:-2]
                         codebooks[k_short] = i
-                    elif k.startswith('Probe_FASTA_'):
+                    elif k.startswith('Probes_FASTA_'):
                         k_short = k[:-2]
                         probe_sets[k_short] = i
                     else:
@@ -2121,7 +2122,7 @@ class FISH2():
                     params[k] = i
 
             params['Codebooks'] = codebooks
-            params['Probe_FASTA'] = probe_sets
+            params['Probes_FASTA'] = probe_sets
 
             #Dump params in new .yaml file.
             perif.yamlMake(fname, params)
@@ -2267,6 +2268,8 @@ class FISH2():
                     #################################################################
                     #Perform Repeat Part of experiment
                     function2('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)])
+                    #Update
+                    self.updateExperimentalParameters(self.db_path, ignore_flags=False)
                     #Write info file for this round
                     create_info_dict(cur_exp, cur_stain, log=log_info_file)
         
