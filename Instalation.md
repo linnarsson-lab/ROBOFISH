@@ -25,7 +25,7 @@ Depending on your configuration of the ROBOFISH system download the files of the
 - [ThermoCube](https://github.com/linnarsson-lab/ThermoCube) recirculating chiller.
 - [Oasis](https://github.com/linnarsson-lab/Oasis_chiller) recirculating chiller.
 - [TC-720](https://github.com/linnarsson-lab/Py_TC-720) temperature controller.
-- [Tecan syringe pump](https://github.com/benpruitt/tecancavro).
+- [Tecan syringe pump (Original repository)](https://github.com/benpruitt/tecancavro) or [Tecan syringe pump (Forked repository with code for XCalibur with or withoud distribution valve and XE1000)](https://github.com/linnarsson-lab/tecancavro).
 
 ### Start user program
 The user program is the main interface for the user to give expermental parameters to the system.  
@@ -121,7 +121,9 @@ The next cell in the Jupyter lab notebook will contain the functions to initiate
   - For the Tecan Cavro XCalibur pump: In line 372 set direction equal to `'Z'` if the RunningBuffer is connected to the left port and the reservoir to the the right, like: `direction='Z'`. If your ports are mirrored set `direction` equal to `'Y'`.
     
 - Now initiate the system by calling: `F2 = FISH2_functions.FISH2(db_path, imaging_output_folder, start_imaging_file_path, system_name='ROBOFISH')`
-- In the `XXXXXXXXXXXXXXXXXXXXX file with basic instructions` file you will find examples and explanation of the basic and advanced functions of ROBOFISH so that you can program you own protocols. In the `XXXXXXXXXXXXXXXXXXX EEL.ipynb` file you will find the full protocol to run EEL experiments.
+- 
+- In the [ROBOFISH_custom_functions.ipynb](https://github.com/linnarsson-lab/ROBOFISH/blob/master/Example_notebooks/ROBOFISH_custom_functions.ipynb) file you will find examples and explanation of the basic and advanced functions of ROBOFISH so that you can program you own protocols. In the [EEL.ipynb](https://github.com/linnarsson-lab/ROBOFISH/blob/master/Example_notebooks/EEL.ipynb) file you will find the full protocol to run EEL experiments.  
+- For running serial smFISH experiments like osmFISH use the [osmFISH.ipynb](https://github.com/linnarsson-lab/ROBOFISH/blob/master/Example_notebooks/osmFISH.ipynb) notebook.
 - If something goes wrong and you want to restart the initiation, you need to restart the kernel of the notebook (Kernel --> Restart kernel). This is because the COM ports will be dedicated already and can not be reassigned by the same python kernel. 
 
 ### Prime the system
