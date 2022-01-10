@@ -142,13 +142,10 @@ To set it up follow these steps:
 
 - From the Yoctopuce website download the Python [libraries](https://www.yoctopuce.com/EN/libraries.php). 
 
-- Copy the following files to the ROBOFISH folder" 
-
-  - f1 XXXXXXXXXXXXXXXXXXXXXXX 
-
-  - f2 XXXXXXXXXXXXXXXXXXXXXX 
-
-  - folder cdll 
+- Copy the following files to the main ROBOFISH folder" 
+  - yocto_api.py
+  - yocto_temperature.py
+  - The entire `cdll` folder 
 
 - Download the Virtual hub software from [here](https://www.yoctopuce.com/EN/virtualhub.php) and install it with [these instructions](https://www.yoctopuce.com/projects/VirtualHub/VIRTHUB0.usermanual-EN.pdf) 
 
