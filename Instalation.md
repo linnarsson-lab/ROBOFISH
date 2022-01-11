@@ -205,7 +205,7 @@ Continue with the next part.
 
 ### Configuring alarm volumes. 
 
-Scroll down in the info file until you found the Alert_volumes table. This table contains volumes below or above which the system will warn the user. For instance ,if the waste container is full, meaning it is above the given alter volume, it will send a message to the user. Or if one of the buffers is running low it will send an alarm. Additionally, it checks if there is enough disk space. For now, just add a volume for the connected buffers at 10% of the containers volume. Or at 90% of the waste container volume. Later you can fine-tune these numbers depending on your protocol.   
+Scroll down in the info file until you found the Alert_volumes table. This table contains volumes below or above which the system will warn the user. For instance,if the waste container is full, meaning it is above the given alert volume, it will send a message to the user. Or if one of the buffers is running low it will send an alarm. Additionally, it checks if there is enough disk space. For now, just add a volume for the connected buffers at 10% of the containers volume. Or at 90% of the waste container volume. Later you can fine-tune these numbers depending on your protocol.   
 
   
 
@@ -227,9 +227,9 @@ The next cell in the Jupyter lab notebook will contain the functions to initiate
 
 - For the first run you can ignore the `start_imaging_file_path` and the `imaging_output folder`. Below are the explanations if you want to set them up. 
 
-  - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a `0`. `0` means no sample to image. `1` means start imaging of Chamber1, `2` means start imaging of Chamber2.) 
+  - The `start_imaging_file` is a file that the system uses to communicate with the Nikon software to automatically start the imaging once a staining is done. It is present in this repository. Find the 'start_imaging_file.txt', and put the path to this file in the program. (The `start_imaging_file.txt` is a text file with a single number in it. If you make it from scratch put a `0`. `0` means no sample to image. `1` means start imaging of Chamber1, `2` means start imaging of Chamber2.) In the event that you need to abort the imaging of an experiment it can be that the`start_imaging_file.txt` is still set to `1` or `2`, this will prevent the scheduler from executing the fluidic protocol. You will see a message saying "waiting for imaging to finish" but then it hangs forever. Then you should manually reset the `start_imaging_file.txt` to `0`.
 
-  - For the `imaging_output_folder` specify the path where the images will be saved. The program will make a log file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)` 
+  - For the `imaging_output_folder` specify the path where the images will be saved. The program will make an info file containing all details of that imaging round and experiment to the specified folder. It is a pickeled python dictionary that can be opened with: `pickle.load(open('<path to file>', 'rb)` 
 
   
 - The pump needs to know which side is the input port and which is the output port. At the moment this is hardcoded and needs to be changed manually. In the ROBOFISH folder open the `FISH2_functions.py` file, change it and save: 
@@ -335,7 +335,14 @@ Once the parameters are all filled in you can start the experiment. You do this 
 
 ### Install job 
 
-Open the NIS Elements JOBS explorer and import the [Nikon_imaging_job_template.bin](https://github.com/linnarsson-lab/ROBOFISH/blob/master/Nikon_imaging_job_template.bin) imaging job file. 
+Open the NIS Elements JOBS explorer and import the [Nikon_imaging_job_template.bin](https://github.com/linnarsson-lab/ROBOFISH/blob/master/Nikon_imaging_job_template.bin) imaging job file. Then open it by clicking on it.  
+
+In the first cell you can specify the folder where the images should be saved. This path should also be given to the ROBOFISH system in the Jupyter lab so that the info files are put here.  
+
+In the imaging Job you will find three Macros with code.  
+The first Macro is to read the `start_imaging_file.txt`, make sure the path to this file is correct and the same to the input of the ROBOFISH system in the Jupyter Lab.  
+The second is for renaming the info file. Make sure the path to the `Rename_info_file.py` script is correct (found in the ROBOFISH folder).  
+The third Macro resets the `start_imaging_file.txt`, also here make sure the path to this file is correct.
 
   
 
@@ -409,4 +416,12 @@ The start of the imaging software is regulated through the `start_imaging_file.t
 
 To link the info files to specific image file you can use the `rename_info_file.py` program. The info files will be generated with a name starting with `TEMPORARY` the `rename_info_file.py` program changes the temporary part to `CountXXXXX` where XXXXX will be a number for the labeling cycle. Have your program call the `rename_info_file.py` program with the cycle number and the imaging output folder as inputs. 
 
- 
+# Common issues
+
+- When you need to restart the ROBOFISH system in the Jupyter Lab first restart the kernel. Otherwise, the USB ports are blocked.
+
+- In the event that you need to abort the imaging of an experiment it can be that the`start_imaging_file.txt` is still set to `1` or `2`, this will prevent the scheduler from executing the fluidic protocol. You will see a message saying someting like "waiting for imaging to finish" but then it hangs forever. Then you should manually reset the `start_imaging_file.txt` to `0`. This can also be caused by the Imaging software not being able to reset the `start_imaging_file.txt` file to `0`. 
+
+- If the imaging Job is not renaming the TEMPORARY_... info files properly, either the path to the `Rename_info_file.py` is not correct, which can be fixed in one of the Macros of the imaging Job. Or the imaging Job has no acces to Python. Please follow the steps under "Enable info file renaming"
+
+- If the imaging Job is not noticing that it should start imaing or if it does not properly notify the ROBOFISH system to continue after imaging, it might be that the paths to the `start_imaging_file.txt` is not specified properly. Open the Macros of the imaging Job and correct the paths to the file. 
