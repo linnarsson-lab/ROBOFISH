@@ -194,6 +194,10 @@ class FISH2():
         self.L.logger.info(f'Path to imaging_output_folder: {imaging_output_folder}')
         self.L.logger.info(f'Path to start_imaging_file_path: {start_imaging_file_path}')
         
+        #Make sure imaging start file is set to 0
+        with open(self.start_imaging_file_path, 'w') as start_imaging_file:
+            start_imaging_file.write('0')
+        self.L.logger.info('Set "start_imaging_file" to zero.')
               
         # Ask user if hardware can be initialized and primed.
         input('''\nPress Enter if:
@@ -1119,6 +1123,10 @@ class FISH2():
             the sample. 
         `wash`(bool): Wash the hybmix tubes. Default True
         `wash_cycles`(int): Number of times to wash the hybmix tubes.
+
+        Returns:
+        The port number of the used Hybridization mix so that it can be cleaned.
+
         """
         #"HYB" is the hybridization buffer without probes in the big container.
         #"Hybmix" is the hybridization buffer with the probes, in the eppendorf tubes.
@@ -1249,7 +1257,6 @@ class FISH2():
         self.updateBuffer('RunningBuffer', pad + 200 + 500, check=False)
         self.updateBuffer('Waste', (Hybmix_vol+pad + 200 + 500), check = True)
         self.L.logger.info('    Dispensed {} to {}, start hybridization. indirect={}, steps={}, slow_speed={}, prehyb={}, wash={}'.format(Hybmix_code, target, indirect, steps, slow_speed, prehyb, wash))
-        perif.removeHybmix(self.db_path, Hybmix_port)
 
         #Calculate time hybridization would finish.
         hyb_time_code = 'Hyb_time_{}{}'.format(target[-1], indirect)
@@ -1260,6 +1267,8 @@ class FISH2():
 
         if wash == True:
             self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles)
+
+        return Hybmix_port
 
     def prime(self, port, update=True):
         """
@@ -1363,6 +1372,8 @@ class FISH2():
         used_vol = 300 + ((vol + 500) * cycles)
         self.updateBuffer('RunningBuffer', used_vol, check=False)
         self.updateBuffer('Waste', used_vol, check=True)
+        #Remove hybmix code from info file
+        perif.removeHybmix(self.db_path, port)
         self.L.logger.info('    Washed port {} {} times with RunningBuffer: {}.'.format(target, cycles, self.Ports['RunningBuffer'])) 
 
     def cleanSystem(self, wash=True, hybmix_cycles=5, hybmix_wash_volume=200):
@@ -1926,7 +1937,7 @@ class FISH2():
 #=============================================================================
 
     def scheduler(self, function1, function2, remove_experiment=True, log_info_file=True,
-                  current_1=None, current_2=None, start_with=None ):
+                  current_1=None, current_2=None, start_with=None, single_experiment=True ):
         """
         Scheduler that schedules and performs the experiments on the ROBOFISH
         system depending on the info provided in the info file. The experiment
@@ -1970,6 +1981,13 @@ class FISH2():
             So if you want to do round 10, pass 9 to current_2.
         `start_with`(int): Number of chamber to start with first. So 1 for
             Chamber1 and 2 for Chamber2.
+        Scheduling options:
+        `single_experiment` (bool): If True, the scheduler will perform a single
+            experiment in a single hybridization chamber. If False, the
+            scheduler will stay on and wait for the next experiment to be filled
+            in by the user in the info file. If you run two flow cells this 
+            needs to be set to False.
+
         """
 
         #######################################################
@@ -2280,6 +2298,14 @@ class FISH2():
                     #Start the last imaging
                     self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
+                    #If single experiment, wait for last imaging cycle.
+                    if single_experiment == True:
+                        #Wait for last imaging cycle to finish.
+                        self.waitImaging(self.start_imaging_file_path)
+                        #Create file that experiment is completed.
+                        finish_file = open(f'{self.imaging_output_folder}/experimentdone.txt', 'w')
+                        finish_file.close()
+
                     #Logging
                     self.L.logger.info('FINISHED {}, Removing from database and FISH_System_datafile.yalm'.format(cur_exp['EXP_name_{}'.format(cur_stain)]))
                     #Log the targets
