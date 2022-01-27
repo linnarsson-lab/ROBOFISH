@@ -4,7 +4,7 @@ Code and installation instructions for the ROBOFISH system. Which is a fully aut
 ![image info](./Images/ROBOFISH_logo_white.png "ROBOFISH simplified schematic")
 
 # Publication
-The ROBOFISH system was published as part of the EEL method: [link]()  UPDATE LINK!!!!!
+The ROBOFISH system was published as part of the EEL method: [BioRxiv](https://www.biorxiv.org/content/10.1101/2022.01.12.476082v1)
 Please cite this paper when using the ROBOFISH system, thank you!
 
 # Description
