@@ -15,7 +15,7 @@ This setup enables the aspiration of the target buffer into the reservoir, after
 The ROBOFISH system keeps track of buffer volumes and notifies the user by push-messages when buffers need to be replaced. This is also the case for any other errors or aberrant temperatures in the system or room. The full protocol is written to log files and metadata files so that image datasets are accompanied by all relevant data on sample, procedure, gene-targets and timing.
 
 # Building instructions
-Full building instructions are available on Protocols.io [here](https://www.protocols.io/edit/robofish-construction-bcrciv2w) UPDATE LINK!!!!!
+Full building instructions are available on Protocols.io [here](https://www.protocols.io/view/robofish-construction-bcrciv2w)
 
 # Installation
 Instructions to install and operate ROBOFISH can be found [here](https://github.com/linnarsson-lab/ROBOFISH/blob/master/Instalation.md)
