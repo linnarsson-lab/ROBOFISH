@@ -484,7 +484,75 @@ class FISH2():
             if flags['Alert_volume_flag'] == 1:
                 self.Alert_volume = perif.returnDictDB(db_path, 'Alert_volume')[0]
                 perif.removeFlagDB(db_path, 'Alert_volume_flag')
+    
+                
+    def getHybmixCode(self, target, cycle, indirect):
+        """Get the code for the Hybridization mix.
+
+        Input:
+         `target`(str): Target chamber. Like: 'Chamber1'
+        `cycle`(int): Current cycle of experiment.
+        `indirect`(str): Optional when indirect labeling is used. Set indirect 
+            to "A" if you want to dispense the encoding probes. Pass "B" if you 
+            want to dispense the detection probes.
+        Returns:
+        `Hybmix_code`: Code that the user has put in the info file.
+
+        """
+        #Get code for Chamber
+        if target.lower() == 'chamber1':
+            chamber = 'C1_'
+        elif target.lower() == 'chamber2':
+            chamber = 'C2_'
+        else:
+            raise Exception ('Unknown Target: "{}". Choose "Chamber1" or "Chamber2"'.format(target))
         
+        #Get cycle number as string
+        cycle = str(cycle).zfill(2)
+
+        #Make Hybmix code
+        Hybmix_code = chamber + cycle
+
+        #Append indirect letter if indirect protocol is run. 
+        if indirect != None:
+            if indirect.lower() == 'a':
+                indirect = '_A'
+            elif indirect.lower() == 'b':
+                indirect = '_B'
+            elif indirect.lower() == 'c':
+                indirect = '_C'
+            else:
+                raise Exception ('Unknown Indirect labeling indicator: {}, Choose "A" for encoding probes, "B" for amplifiers or "C" for detection probes'.format(indirect))
+            Hybmix_code = Hybmix_code + indirect
+        else:
+            indirect = '_A'
+
+        return Hybmix_code
+    
+    def getHybmixPort(self, Hybmix_code):
+        """Returns the port beloning to a certain hybridization mix.
+
+        Input:
+        `Hybmix_code` (str): Identifier of the hybridization mix.
+            Can be obtained from self.getHybmixCode().
+        Returns:
+        `Hybmix_port` (str): Port number of the required port.
+
+        """
+        #Test if Hybridization mix is placed in the system by the user.
+        while True:
+            try:
+                Hybmix_port_reverse = {v:k for k,v in self.Hybmix.items()}
+                Hybmix_port = Hybmix_port_reverse[Hybmix_code]
+                break
+            except KeyError as e:
+                print('Right Hybridization mix is not connected. Add {} to system. KeyError: {}'.format(Hybmix_code, e))
+                print('Note: if the mensioned Hybmix is already dispensed, you probably told the program to wash both after dispensing the Hybmix and in the sceduler. Set one of them to False.')
+                self.push(short_message='Hybmix not connected',
+                          long_message= 'Please place Hybmix {} in system and add it to the "Hybmix" table in the datafile'.format(Hybmix_code))
+                input('Press enter if {} is placed and added to the "Hybmix" table in the datafile...'.format(Hybmix_code))
+                self.updateExperimentalParameters(self.db_path, ignore_flags=True)
+        return Hybmix_port
         
 #=============================================================================
 # Hardware management        
@@ -1098,7 +1166,9 @@ class FISH2():
         self.L.logger.info('    Dispensed {}ul of {} to {} with speed {}, padding={}, same_buffer_padding={}, double_volume={}'.format(volume, buffer, target, speed, padding, same_buffer_padding, double_volume))
 
     @functionWrap    
-    def extractDispenseHybmix(self, target, cycle, indirect=None, steps = 10, slow_speed = None, prehyb=True, wash=True, wash_cycles=5):
+    def extractDispenseHybmix(self, target, cycle, indirect=None, steps = 10, slow_speed = None, 
+                              prehyb=True, wash_hybmix_tubes=False, wash_cycles=5,
+                              wash_volume=200):
         """
         Loads Hybmix without probes in reservoir, push it towards the chamber.
         Then load Hybmix with probes in reservoir and dispense to target chamber.
@@ -1121,55 +1191,22 @@ class FISH2():
         `prehyb`(bool): Before dispensing the Hybridization mix with probes
             dispense a mix without probes to equilibrate the components in 
             the sample. 
-        `wash`(bool): Wash the hybmix tubes. Default True
+        `wash`(bool): Wash the hybmix tubes. Warning: If the hybmix tubes are 
+            washed in this function they should not also be wased in the 
+            scheduler! Default False.
         `wash_cycles`(int): Number of times to wash the hybmix tubes.
-
-        Returns:
-        The port number of the used Hybridization mix so that it can be cleaned.
+        `wash_volume`(int): Extra volume to wash the ependroff tubes with.
 
         """
         #"HYB" is the hybridization buffer without probes in the big container.
         #"Hybmix" is the hybridization buffer with the probes, in the eppendorf tubes.
 
+        #Get volume of hybridization mix to dispense
         Hybmix_vol = self.Parameters['Hybmix_volume']
-        if target.lower() == 'chamber1':
-            chamber = 'C1_'
-        elif target.lower() == 'chamber2':
-            chamber = 'C2_'
-        else:
-            raise Exception ('Unknown Target: "{}". Choose "Chamber1" or "Chamber2"'.format(target))
-        
-        cycle = str(cycle).zfill(2)
-        
-        Hybmix_code = chamber + cycle
-
-        if indirect != None:
-            if indirect.lower() == 'a':
-                indirect = '_A'
-                indirect = '_A'
-            elif indirect.lower() == 'b':
-                indirect = '_B'
-            elif indirect.lower() == 'c':
-                indirect = '_C'
-            else:
-                raise Exception ('Unknown Indirect labeling indicator: {}, Choose "A" for encoding probes, "B" for amplifiers or "C" for detection probes'.format(indirect))
-            Hybmix_code = chamber + cycle + indirect
-        else:
-            indirect = '_A'
-
-        #Test if Hybridization mix is placed in the system by the user.
-        while True:
-            try:
-                Hybmix_port_reverse = {v:k for k,v in self.Hybmix.items()}
-                Hybmix_port = Hybmix_port_reverse[Hybmix_code]
-                break
-            except KeyError as e:
-                print('Right Hybridization mix is not connected. Add {} to system. KeyError: {}'.format(Hybmix_code, e))
-                self.push(short_message='Hybmix not connected',
-                          long_message= 'Please place Hybmix {} in system and add it to the "Hybmix" table in the datafile'.format(Hybmix_code))
-                input('Press enter if {} is placed and added to the "Hybmix" table in the datafile...'.format(Hybmix_code))
-                self.updateExperimentalParameters(self.db_path, ignore_flags=True)
-
+        #Get Hybmix code. Code that the user has put into the info file
+        Hybmix_code = self.getHybmixCode(target, cycle, indirect)
+        #Get Hybmix port. Port to which the required hybmix is connected.
+        Hybmix_port = self.getHybmixPort(Hybmix_code)
 
         #Check if the volume is not exceeded
         slow_degass_vol = self.Padding['Degass'] + 25 * steps
@@ -1265,10 +1302,8 @@ class FISH2():
         finish_time = (datetime.now() + timedelta(hours = hyb_time)).strftime("%d-%m-%Y %H:%M:%S")
         print('Hybridization start time: {}, Done at: {}'.format(current_time, finish_time))
 
-        if wash == True:
-            self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles)
-
-        return Hybmix_port
+        if wash_hybmix_tubes == True:
+            self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles, wash_volume=wash_volume)
 
     def prime(self, port, update=True):
         """
@@ -1937,7 +1972,8 @@ class FISH2():
 #=============================================================================
 
     def scheduler(self, function1, function2, remove_experiment=True, log_info_file=True,
-                  current_1=None, current_2=None, start_with=None, single_experiment=True ):
+                  current_1=None, current_2=None, start_with=None, single_experiment=True,
+                 wash_hybmix_tubes=True, wash_cycles=5, wash_volume=200):
         """
         Scheduler that schedules and performs the experiments on the ROBOFISH
         system depending on the info provided in the info file. The experiment
@@ -1987,6 +2023,12 @@ class FISH2():
             scheduler will stay on and wait for the next experiment to be filled
             in by the user in the info file. If you run two flow cells this 
             needs to be set to False.
+        Cleaning options:
+        `wash_hybmix_tubes`(bool): Wash the hybmix tubes. Warning: If the hybmix 
+            tubes are washed in this function they should not also be wased in 
+            the extractDispenseHybmix() function! Default True.
+        `wash_cycles` (int): Number of times to wash the hybmix tubes.
+        `wash_volume` (int): Extra volume to wash the Eppendorff tube with.
 
         """
 
@@ -2384,6 +2426,14 @@ class FISH2():
                 #Start imaging of Current_Stain, will wait untill the imaging of the other chamber has finished.
                 self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                 self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
+               
+                #Wash the hybmix tubes during the imaging but before cntinuing with the other experiment.
+                if wash_hybmix_tubes == True:
+                    #Get Hybmix port.
+                    Hybmix_code = self.getHybmixCode(target, cycle, indirect)
+                    Hybmix_port = self.getHybmixPort(Hybmix_code)
+                    #Clean thybmix tube.
+                    self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles, wash_volume=wash_volume)
 
                 #FLIP the conditions of the 2 chambers
                 cur_exp['Current_staining'] = other
