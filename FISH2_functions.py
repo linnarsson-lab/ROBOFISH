@@ -374,7 +374,7 @@ class FISH2():
             self.L.logger.info('    Initiating CavroXCalibur.')
             self.pump.init(speed=16, 
                     direction='Z') #Z = Input left, output right. Y = Input right, output left
-            self.pump.setSpeed(20)
+            self.pump.setSpeed(22)
             self.L.logger.info('    CavroXCalibur initiated.')
             self.devices.append('CavroXCalibur')
 
@@ -1293,7 +1293,7 @@ class FISH2():
         self.pump.setSpeed(cached_speed, execute=True)
         self.updateBuffer('RunningBuffer', pad + 200 + 500, check=False)
         self.updateBuffer('Waste', (Hybmix_vol+pad + 200 + 500), check = True)
-        self.L.logger.info('    Dispensed {} to {}, start hybridization. indirect={}, steps={}, slow_speed={}, prehyb={}, wash={}'.format(Hybmix_code, target, indirect, steps, slow_speed, prehyb, wash))
+        self.L.logger.info('    Dispensed {} to {}, start hybridization. indirect={}, steps={}, slow_speed={}, prehyb={}, wash={}'.format(Hybmix_code, target, indirect, steps, slow_speed, prehyb, wash_hybmix_tubes))
 
         #Calculate time hybridization would finish.
         hyb_time_code = 'Hyb_time_{}{}'.format(target[-1], indirect)
@@ -2430,7 +2430,7 @@ class FISH2():
                 #Wash the hybmix tubes during the imaging but before cntinuing with the other experiment.
                 if wash_hybmix_tubes == True:
                     #Get Hybmix port.
-                    Hybmix_code = self.getHybmixCode(target, cycle, indirect)
+                    Hybmix_code = self.getHybmixCode('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)], indirect=None)
                     Hybmix_port = self.getHybmixPort(Hybmix_code)
                     #Clean thybmix tube.
                     self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles, wash_volume=wash_volume)
