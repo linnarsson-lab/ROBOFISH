@@ -1296,6 +1296,20 @@ class FISH2():
         self.L.logger.info('    Dispensed {} to {}, start hybridization. indirect={}, steps={}, slow_speed={}, prehyb={}, wash={}'.format(Hybmix_code, target, indirect, steps, slow_speed, prehyb, wash_hybmix_tubes))
 
         #Calculate time hybridization would finish.
+        # Was getting an error here.
+        if indirect != None:
+            if indirect.lower() == 'a':
+                indirect = '_A'
+            elif indirect.lower() == 'b':
+                indirect = '_B'
+            elif indirect.lower() == 'c':
+                indirect = '_C'
+            else:
+                raise Exception ('Unknown Indirect labeling indicator: {}, Choose "A" for encoding probes, "B" for amplifiers or "C" for detection probes'.format(indirect))
+            Hybmix_code = Hybmix_code + indirect
+        else:
+            indirect = '_A'
+
         hyb_time_code = 'Hyb_time_{}{}'.format(target[-1], indirect)
         hyb_time = self.Parameters[hyb_time_code]        
         current_time = time.strftime("%d-%m-%Y %H:%M:%S")
@@ -2340,6 +2354,13 @@ class FISH2():
                     #Start the last imaging
                     self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
+                    #Wash the hybmix tubes during the imaging before wrapping up the experiment.
+                    if wash_hybmix_tubes == True:
+                        #Get Hybmix port.
+                        Hybmix_code = self.getHybmixCode('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)], indirect=None)
+                        Hybmix_port = self.getHybmixPort(Hybmix_code)
+                        #Clean thybmix tube.
+                        self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles, wash_volume=wash_volume)
                     #If single experiment, wait for last imaging cycle.
                     if single_experiment == True:
                         #Wait for last imaging cycle to finish.
@@ -2427,7 +2448,7 @@ class FISH2():
                 self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                 self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
                
-                #Wash the hybmix tubes during the imaging but before cntinuing with the other experiment.
+                #Wash the hybmix tubes during the imaging but before continuing with the other experiment.
                 if wash_hybmix_tubes == True:
                     #Get Hybmix port.
                     Hybmix_code = self.getHybmixCode('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)], indirect=None)
