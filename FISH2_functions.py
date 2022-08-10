@@ -32,7 +32,6 @@ import numpy as np
 from functools import wraps
 from tkinter import *
 import pickle
-import shutil
 
 # FISH peripherals
 import FISH2_peripherals as perif
@@ -54,32 +53,26 @@ try:
 except ModuleNotFoundError:
     print('Module XCalibur not found. Ignore if not in use.')
 
-    ## MX Valve
+    # MX Valve
 import MXII_valve
 
     ## Thermo Cube
 try:
     import ThermoCube
 except ModuleNotFoundError:
-    print('Module ThermoCube not found. Ignore if machine is not in use.')
-
-    ## Oasis
-try:
-    import Oasis
-except ModuleNotFoundError:
-    print('Module Oasis not found. Ignore if machine is not in use.')
+    print('Module ThermoCube not found. Ignore if machine is not in use')
 
     ## Yoctopuce Thermistor
 try:
     import YoctoThermistor_FISH
 except ModuleNotFoundError:
-    print('Module YoctoThermisto_FISH not found. Ignore if machine is not in use.')
+    print('Module YoctoThermisto_FISH not found. Ignore if machine is not in use')
 
     ## TC-720 temperature controller
 try:
     import Py_TC720
 except ModuleNotFoundError:
-    print('Module Py_TC720 not found. Ignore if machine is not in use.')
+    print('Module Py_TC720 not found. Ignore if machine is not in use')
 
 #=============================================================================
 # Hardware address      
@@ -114,7 +107,7 @@ def find_address(identifier = None):
             \nContinue with manually finding USB address...\n'''.format(identifier))
         else:
             print('{:15}| {:15} |{:15} |{:15} |{:15}'.format('Device', 'Name', 'Serial number', 'Manufacturer', 'Description') )
-            for p in port:
+            for p in connections:
                 print('{:15}| {:15} |{:15} |{:15} |{:15}\n'.format(str(p.device), str(p.name), str(p.serial_number), str(p.manufacturer), str(p.description)))
             raise Exception("""The input returned multiple devices, see above.""")
 
@@ -194,10 +187,6 @@ class FISH2():
         self.L.logger.info(f'Path to imaging_output_folder: {imaging_output_folder}')
         self.L.logger.info(f'Path to start_imaging_file_path: {start_imaging_file_path}')
         
-        #Make sure imaging start file is set to 0
-        with open(self.start_imaging_file_path, 'w') as start_imaging_file:
-            start_imaging_file.write('0')
-        self.L.logger.info('Set "start_imaging_file" to zero.')
               
         # Ask user if hardware can be initialized and primed.
         input('''\nPress Enter if:
@@ -249,10 +238,10 @@ class FISH2():
         
         # initialize Temperature Controller 1 (TC_1)
         if self.Machines['ThermoCube1'] == 1:
-            if device_COM_port['ThermoCube1'] == None:
+            if device_COM_port['ThermoCube_1'] == None:
                 self.L.logger.warning('    ThermoCube_1 not connected (no address available).')
             else:
-                self.TC_1 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube1'], 
+                self.TC_1 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube_1'], 
                                                   name = 'ThermoCube_1')
                 if self.TC_1.connected == True:
                     self.L.logger.info('    Temperature controller TC_1 Initialized.')
@@ -265,10 +254,10 @@ class FISH2():
 
         # initialize Temperature Controller 2 (TC_2) Replace this with your temperature controller if needed.
         if self.Machines['ThermoCube2'] ==1:
-            if device_COM_port['ThermoCube2'] == None:
+            if device_COM_port['ThermoCube_2'] == None:
                 self.L.logger.warning('    ThermoCube_2 not connected (no address available).')
             else:
-                self.TC_2 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube2'], 
+                self.TC_2 = ThermoCube.ThermoCube(address = device_COM_port['ThermoCube_2'], 
                                                   name = 'ThermoCube_2')
                 if self.TC_2.connected == True:
                     self.L.logger.info('    Temperature controller TC_2 Initialized.')
@@ -278,38 +267,6 @@ class FISH2():
                     self.L.logger.warning('    Could not make a connection with ThermoCube_2.')
         else:
             self.L.logger.info('        ThermoCube2 not connected according to user. Ignore if not needed.')
-
-        # initialize Temperature Controller 1 (TC_1)
-        if self.Machines['Oasis1'] == 1:
-            if device_COM_port['Oasis1'] == None:
-                self.L.logger.warning('    Oasis_1 not connected (no address available).')
-            else:
-                self.TC_1 = Oasis.Oasis(address = device_COM_port['Oasis1'], 
-                                                  name = 'Oasis_1')
-                if self.TC_1.connected == True:
-                    self.L.logger.info('    Temperature controller TC_1 Initialized.')
-                    self.setTemp(20, 'Chamber1')
-                    self.devices.append('Oasis1')
-                else:
-                    self.L.logger.warning('    Could not make a connection with Oasis_1.')
-        else:
-            self.L.logger.info('        Oasis1 not connected according to user. Ignore if not needed.')
-
-        # initialize Temperature Controller 2 (TC_2) Replace this with your temperature controller if needed.
-        if self.Machines['Oasis2'] ==1:
-            if device_COM_port['Oasis2'] == None:
-                self.L.logger.warning('    Oasis_2 not connected (no address available).')
-            else:
-                self.TC_2 = Oasis.Oasis(address = device_COM_port['Oasis2'], 
-                                                  name = 'Oasis_2')
-                if self.TC_2.connected == True:
-                    self.L.logger.info('    Temperature controller TC_2 Initialized.')
-                    self.setTemp(20, 'Chamber2')
-                    self.devices.append('Oasis2')
-                else:
-                    self.L.logger.warning('    Could not make a connection with Oasis_2.')
-        else:
-            self.L.logger.info('        Oasis2 not connected according to user. Ignore if not needed.')
 
         # Initiate TC720
         if self.Machines['TC720'] == 1:
@@ -331,7 +288,7 @@ class FISH2():
         # initialize Yocto_Thermistor
         if self.Machines['YoctoThermistor'] == 1:
             try:
-                self.temp = YoctoThermistor_FISH.FISH_temperature_deamon(serial_number = self.Machine_identification['YoctoThermistor'], log_interval=10)
+                self.temp = YoctoThermistor_FISH.FISH_temperature_deamon(serial_number = 'THRMSTR2-629D5', log_interval=10)
                 self.L.logger.info('    YoctoThermistor Initialized.')
                 self.temp.deamon_start()
                 self.devices.append('YoctoThermistor')
@@ -341,6 +298,7 @@ class FISH2():
         else:
             self.L.logger.info('        YcotoThermistor not connected according to user. Ignore if not needed.')
 
+
         # Initialize syringe pump CavroXE1000
         if self.Machines['CavroXE1000'] == 1:
             self.L.logger.info('    Connecting with CavroXE1000.')
@@ -349,7 +307,7 @@ class FISH2():
             self.L.logger.info('    Established connection with CavroXE1000.')
             self.L.logger.info('    Initiating CavroXE1000.')
             self.connectPort('Waste') #Change to waste port
-            self.pump.init(in_port='right', init_speed = 20)
+            self.pump.init(in_port='left', init_speed = 20)
             self.pump.setSpeed(speed=400, execute = True)
             self.pump.setBacklashSteps(5, execute = True)
             self.L.logger.info('    CavroXE1000 Initialized.')
@@ -367,21 +325,21 @@ class FISH2():
                     direction='Z',
                     microstep=False, 
                     slope=14, 
-                    speed=22,
+                    speed=20,
                     debug=False, 
                     debug_log_path='.')
             self.L.logger.info('    Established connection with CavroXCalibur.')
             self.L.logger.info('    Initiating CavroXCalibur.')
             self.pump.init(speed=16, 
                     direction='Z') #Z = Input left, output right. Y = Input right, output left
-            self.pump.setSpeed(22)
+            self.pump.setSpeed(20)
             self.L.logger.info('    CavroXCalibur initiated.')
             self.devices.append('CavroXCalibur')
 
         #Update active machines
         self.L.logger.info('    Connected devices: {}\n'.format(self.devices))
         #   Set them to 0 or 1 in the local dictionary and the database
-        for m in ['MXValve1', 'MXValve2', 'YoctoThermistor', 'CavroXE1000', 'CavroXCalibur', 'ThermoCube1', 'ThermoCube2', 'Oasis1', 'Oasis2', 'TC720']:
+        for m in ['MXValve1', 'MXValve2', 'YoctoThermistor', 'CavroXE1000', 'CavroXCalibur', 'ThermoCube1', 'ThermoCube2', 'TC720']:
             if m in self.devices:
                 print('Active machine: {}'.format(m))
                 self.Machines[m] = 1
@@ -412,11 +370,13 @@ class FISH2():
         Checks if any of the flags are up and if so copies the values into memory.
         Flags indicate new values.
         Makes global dictionaries: Parameters, Buffers, Targets, Ports & Hybmix
+
         Input:
         `db_path`(str): Full path to database.
         `ignore_flags`(bool): Option to ignore the flags and update everything.
                               If False, it only updates the Tables with new information.
                               Pause flag is not ignored.
+
         """
         #Check if experiment is paused
         count = 0
@@ -484,75 +444,7 @@ class FISH2():
             if flags['Alert_volume_flag'] == 1:
                 self.Alert_volume = perif.returnDictDB(db_path, 'Alert_volume')[0]
                 perif.removeFlagDB(db_path, 'Alert_volume_flag')
-    
-                
-    def getHybmixCode(self, target, cycle, indirect):
-        """Get the code for the Hybridization mix.
-
-        Input:
-         `target`(str): Target chamber. Like: 'Chamber1'
-        `cycle`(int): Current cycle of experiment.
-        `indirect`(str): Optional when indirect labeling is used. Set indirect 
-            to "A" if you want to dispense the encoding probes. Pass "B" if you 
-            want to dispense the detection probes.
-        Returns:
-        `Hybmix_code`: Code that the user has put in the info file.
-
-        """
-        #Get code for Chamber
-        if target.lower() == 'chamber1':
-            chamber = 'C1_'
-        elif target.lower() == 'chamber2':
-            chamber = 'C2_'
-        else:
-            raise Exception ('Unknown Target: "{}". Choose "Chamber1" or "Chamber2"'.format(target))
         
-        #Get cycle number as string
-        cycle = str(cycle).zfill(2)
-
-        #Make Hybmix code
-        Hybmix_code = chamber + cycle
-
-        #Append indirect letter if indirect protocol is run. 
-        if indirect != None:
-            if indirect.lower() == 'a':
-                indirect = '_A'
-            elif indirect.lower() == 'b':
-                indirect = '_B'
-            elif indirect.lower() == 'c':
-                indirect = '_C'
-            else:
-                raise Exception ('Unknown Indirect labeling indicator: {}, Choose "A" for encoding probes, "B" for amplifiers or "C" for detection probes'.format(indirect))
-            Hybmix_code = Hybmix_code + indirect
-        else:
-            indirect = '_A'
-
-        return Hybmix_code
-    
-    def getHybmixPort(self, Hybmix_code):
-        """Returns the port beloning to a certain hybridization mix.
-
-        Input:
-        `Hybmix_code` (str): Identifier of the hybridization mix.
-            Can be obtained from self.getHybmixCode().
-        Returns:
-        `Hybmix_port` (str): Port number of the required port.
-
-        """
-        #Test if Hybridization mix is placed in the system by the user.
-        while True:
-            try:
-                Hybmix_port_reverse = {v:k for k,v in self.Hybmix.items()}
-                Hybmix_port = Hybmix_port_reverse[Hybmix_code]
-                break
-            except KeyError as e:
-                print('Right Hybridization mix is not connected. Add {} to system. KeyError: {}'.format(Hybmix_code, e))
-                print('Note: if the mensioned Hybmix is already dispensed, you probably told the program to wash both after dispensing the Hybmix and in the sceduler. Set one of them to False.')
-                self.push(short_message='Hybmix not connected',
-                          long_message= 'Please place Hybmix {} in system and add it to the "Hybmix" table in the datafile'.format(Hybmix_code))
-                input('Press enter if {} is placed and added to the "Hybmix" table in the datafile...'.format(Hybmix_code))
-                self.updateExperimentalParameters(self.db_path, ignore_flags=True)
-        return Hybmix_port
         
 #=============================================================================
 # Hardware management        
@@ -566,8 +458,10 @@ class FISH2():
         and add the identifier to the user FISH_System_datafil.yaml
         Returns:
         `device_COM_port` (dict): Dictionary with name of device and COM port. 
+
         Devices need to be added to the database using the FISH2_user_program and
         the FISH_system_datafile.yaml
+
         """
         device_COM_port = {
             'CavroXE1000': None,
@@ -576,8 +470,6 @@ class FISH2():
             'MXValve2': None,
             'ThermoCube1': None,
             'ThermoCube2': None,
-            'Oasis1': None,
-            'Oasis2': None,
             'YoctoThermistor': None,
             'TC720': None}
 
@@ -655,6 +547,7 @@ class FISH2():
         `volume`(int): Volume to test as padding volume
         `air_port`(str): Name of port that is disconnected. Like: 'P3'
         `target`(str): Target to push to. Like: 'Chamber1' or 'P2'
+
         """
         input('This function will push a tiny air bubble to the hybridization chamber, if it just reaches it you have found the padding volume. Press Enter to continue...')
         self.connectPort(air_port)
@@ -675,6 +568,7 @@ class FISH2():
         Input:
         `volume`(int): Volume to test as padding volume
         `hybmix`(str): Hybmix to aspirate. Like: 'HYB01'
+
         """
         input('Place some liquid (use same viscosity as real experiment) in the system. This function will aspirate the volume and you need to see if the liquid reaches the reservoir tube. The best is if it just reaches the reservoir. Press Enter to continue...')
         self.connectPort(hybmix)
@@ -700,6 +594,7 @@ class FISH2():
         `volume`(int): Volume to test as padding volume
         `buffer_intrest`(str): Name of port of interest
         `air_port`(str): Port connected to air
+
         """
         print('Make sure the tube of the buffer of interest is filled with air.')
         input('Press Enter to start and aspirate {}ul of the buffer. Please look at the buffer and note where it ends up. Press Enter to continue...'.format(volume))
@@ -722,6 +617,7 @@ class FISH2():
         Input:
         `short_message`(str): Subject of message.
         `long_message`(str): Body of message.
+
         """
         sm = '{}: {}'.format(self.system_name, short_message)
         perif.send_push(self.Operator_address, operator = self.Parameters['Operator'],
@@ -737,6 +633,7 @@ class FISH2():
         It will notify the Operator if any of the buffers need a refill
         The minimal volumes can be defined with the user program in the 
         Alert_volume table. Waste is checked if it is too full.
+
         """
         #Check current volumes
         almost_empty = []
@@ -808,6 +705,7 @@ class FISH2():
             the buffer name as in the 'Ports' dictionary..
         `port_number`(bool): If False, returns the port code P1-P20.
             If True, returns the port number 1-20.
+
         """
         #Check input
         if target not in self.Ports.keys() and target not in self.Ports.values(): 
@@ -832,6 +730,7 @@ class FISH2():
         Input:
         `target`(str): Either the port number (P1-P20) or
             the buffer name as in the 'Ports' dictionary.
+
         """
         #Get the number of the port
         port = self.getPort(target, port_number=True)
@@ -859,6 +758,7 @@ class FISH2():
         `volume`(int): Volume to aspirate.
         `bubble`(bool): If a bubble of 30ul should be aspirated. Default = False
         `bubble_volume`(int): Volume of bubble. Default 30ul.
+
         """
         if bubble == True:
             self.airBubble(bubble_volume = bubble_volume)
@@ -874,6 +774,7 @@ class FISH2():
         Input:
         `target`(str): target buffer/port as in the 'ports' dictionary.
         `volume`(int): volume in ul to dispense.
+
         """
         self.connectPort(target)
         self.pump.dispense(volume_ul = volume, to_port= 'output', execute=True)       
@@ -886,6 +787,7 @@ class FISH2():
         `target`(int): Target to dispense to, eiter Buffer name as in Ports,
             or the port number. 
         Returns the padding volume.
+
         """
         target = self.getPort(target)
         volume = self.Padding[self.getPort(target)]
@@ -900,6 +802,7 @@ class FISH2():
         `bubble_vollume`(int): size of the bubble in ul. Default = 30.
                                volume should be between 10 and 50 ul.
         10ul might be unstable. 30 works consistent
+
         """
         #in the 1/8"OD, 0.62" tube of the reservoir, 1mm holds 1.94778 ul
         if not 10 <= bubble_volume <= 50:
@@ -920,6 +823,7 @@ class FISH2():
         Input:
         `replace_volume`(int): Volume to replace in reservoir. Default 200ul.
         `update_buffer`(bool): If true it will update the RunningBuffer  and Waste volumes.
+
         """
         max_volume = self.pump.syringe_ul
         if not 0 <= replace_volume <= (max_volume + 1):
@@ -1050,6 +954,7 @@ class FISH2():
         `volume`(int): volume to extract and dispense.
         `target`(str): target port as in the 'ports' dictionary.
         `padding`(bool): True if padding needs to be used to reach target.
+
         """
         #Check if the max volume of the syringe is not exceeded.
         max_volume = self.pump.syringe_ul
@@ -1103,6 +1008,7 @@ class FISH2():
             wash of a series to completely exchange the previous buffer.
         `speed`(int): dispense speed. Unit depends on the specific pump used
             refer the pump specific speeds.
+
         """
         #Check if the max volume of the syringe is not exceeded.
         max_volume = self.pump.syringe_ul
@@ -1166,9 +1072,7 @@ class FISH2():
         self.L.logger.info('    Dispensed {}ul of {} to {} with speed {}, padding={}, same_buffer_padding={}, double_volume={}'.format(volume, buffer, target, speed, padding, same_buffer_padding, double_volume))
 
     @functionWrap    
-    def extractDispenseHybmix(self, target, cycle, indirect=None, steps = 10, slow_speed = None, 
-                              prehyb=True, wash_hybmix_tubes=False, wash_cycles=5,
-                              wash_volume=200):
+    def extractDispenseHybmix(self, target, cycle, indirect=None, steps = 10, slow_speed = None, prehyb=True, wash=True, wash_cycles=5):
         """
         Loads Hybmix without probes in reservoir, push it towards the chamber.
         Then load Hybmix with probes in reservoir and dispense to target chamber.
@@ -1191,22 +1095,52 @@ class FISH2():
         `prehyb`(bool): Before dispensing the Hybridization mix with probes
             dispense a mix without probes to equilibrate the components in 
             the sample. 
-        `wash`(bool): Wash the hybmix tubes. Warning: If the hybmix tubes are 
-            washed in this function they should not also be wased in the 
-            scheduler! Default False.
+        `wash`(bool): Wash the hybmix tubes. Default True
         `wash_cycles`(int): Number of times to wash the hybmix tubes.
-        `wash_volume`(int): Extra volume to wash the ependroff tubes with.
 
         """
         #"HYB" is the hybridization buffer without probes in the big container.
         #"Hybmix" is the hybridization buffer with the probes, in the eppendorf tubes.
 
-        #Get volume of hybridization mix to dispense
         Hybmix_vol = self.Parameters['Hybmix_volume']
-        #Get Hybmix code. Code that the user has put into the info file
-        Hybmix_code = self.getHybmixCode(target, cycle, indirect)
-        #Get Hybmix port. Port to which the required hybmix is connected.
-        Hybmix_port = self.getHybmixPort(Hybmix_code)
+        if target.lower() == 'chamber1':
+            chamber = 'C1_'
+        elif target.lower() == 'chamber2':
+            chamber = 'C2_'
+        else:
+            raise Exception ('Unknown Target: "{}". Choose "Chamber1" or "Chamber2"'.format(chamber))
+        
+        cycle = str(cycle).zfill(2)
+        
+        Hybmix_code = chamber + cycle
+
+        if indirect != None:
+            if indirect.lower() == 'a':
+                indirect = '_A'
+                indirect = '_A'
+            elif indirect.lower() == 'b':
+                indirect = '_B'
+            elif indirect.lower() == 'c':
+                indirect = '_C'
+            else:
+                raise Exception ('Unknown Indirect labeling indicator: {}, Choose "A" for encoding probes, "B" for amplifiers or "C" for detection probes'.format(indirect))
+            Hybmix_code = chamber + cycle + indirect
+        else:
+            indirect = '_A'
+
+        #Test if Hybridization mix is placed in the system by the user.
+        while True:
+            try:
+                Hybmix_port_reverse = {v:k for k,v in self.Hybmix.items()}
+                Hybmix_port = Hybmix_port_reverse[Hybmix_code]
+                break
+            except KeyError as e:
+                print('Right Hybridization mix is not connected. Add {} to system. KeyError: {}'.format(Hybmix_code, e))
+                self.push(short_message='Hybmix not connected',
+                          long_message= 'Please place Hybmix {} in system and add it to the "Hybmix" table in the datafile'.format(Hybmix_code))
+                input('Press enter if {} is placed and added to the "Hybmix" table in the datafile...'.format(Hybmix_code))
+                self.updateExperimentalParameters(self.db_path, ignore_flags=True)
+
 
         #Check if the volume is not exceeded
         slow_degass_vol = self.Padding['Degass'] + 25 * steps
@@ -1223,7 +1157,7 @@ class FISH2():
         if not 0 <= volume_to_aspirate <= (max_volume + 1):
             raise(ValueError('''Pump syringe volume exceeded.\n
                 The volume and padding can not be more than: {}ul.\n
-                Volume to pipet: {}ul and padding volume: {}ul.'''.format(max_volume, Hybmix_vol, self.Padding[self.getPort(target)])))
+                Volume to pipet: {}ul and padding volume: {}ul.'''.format(max_volume, volume, self.Padding[self.getPort(target)])))
 
         #Check if the speed is valid
         if slow_speed == None or not self.pump.min_speed <= slow_speed <= self.pump.max_speed:
@@ -1267,9 +1201,7 @@ class FISH2():
         self.extractBuffer(Hybmix_port, Hybmix_vol)
 
         #Creates a padding volume in syringe to bridge the tubes between reservoir and target
-        self.pump.setSpeed(cached_speed, execute=True)
         pad = self.padding(target)
-        self.pump.setSpeed(slow_speed, execute=True)
 
         #Dispense:
             #Hybmix_probes
@@ -1293,31 +1225,18 @@ class FISH2():
         self.pump.setSpeed(cached_speed, execute=True)
         self.updateBuffer('RunningBuffer', pad + 200 + 500, check=False)
         self.updateBuffer('Waste', (Hybmix_vol+pad + 200 + 500), check = True)
-        self.L.logger.info('    Dispensed {} to {}, start hybridization. indirect={}, steps={}, slow_speed={}, prehyb={}, wash={}'.format(Hybmix_code, target, indirect, steps, slow_speed, prehyb, wash_hybmix_tubes))
+        self.L.logger.info('    Dispensed {} to {}, start hybridization. indirect={}, steps={}, slow_speed={}, prehyb={}, wash={}'.format(Hybmix_code, target, indirect, steps, slow_speed, prehyb, wash))
+        perif.removeHybmix(self.db_path, Hybmix_port)
 
         #Calculate time hybridization would finish.
-        # Was getting an error here.
-        if indirect != None:
-            if indirect.lower() == 'a':
-                indirect = '_A'
-            elif indirect.lower() == 'b':
-                indirect = '_B'
-            elif indirect.lower() == 'c':
-                indirect = '_C'
-            else:
-                raise Exception ('Unknown Indirect labeling indicator: {}, Choose "A" for encoding probes, "B" for amplifiers or "C" for detection probes'.format(indirect))
-            Hybmix_code = Hybmix_code + indirect
-        else:
-            indirect = '_A'
-
         hyb_time_code = 'Hyb_time_{}{}'.format(target[-1], indirect)
         hyb_time = self.Parameters[hyb_time_code]        
         current_time = time.strftime("%d-%m-%Y %H:%M:%S")
         finish_time = (datetime.now() + timedelta(hours = hyb_time)).strftime("%d-%m-%Y %H:%M:%S")
         print('Hybridization start time: {}, Done at: {}'.format(current_time, finish_time))
 
-        if wash_hybmix_tubes == True:
-            self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles, wash_volume=wash_volume)
+        if wash == True:
+            self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles)
 
     def prime(self, port, update=True):
         """
@@ -1327,6 +1246,7 @@ class FISH2():
         `port`(str): Port to prime
         `update`(bool): Update the buffer volume. 
             Select True when priming. Select False when cleaning the tubes.
+
         """
         #Prime RunningBuffer
         if port == 'RunningBuffer':
@@ -1356,6 +1276,7 @@ class FISH2():
                         guide you through the priming of the Degassi.
                         If False it will presume that everything is filled with 
                         RunningBuffer except for the hyb chambers.
+
         """
         self.L.logger.info('Priming system')
         master = Tk()
@@ -1403,6 +1324,7 @@ class FISH2():
         `port`(str): Port number to wash.
         `cycles`(int): Number of wash cycles. Default 5.
         `wash_volume`(int): Extra volume to wash the Eppendorff tube with.
+
         """
         target = self.getPort(port)
         #Remove hybmix remainder from tubes
@@ -1421,8 +1343,6 @@ class FISH2():
         used_vol = 300 + ((vol + 500) * cycles)
         self.updateBuffer('RunningBuffer', used_vol, check=False)
         self.updateBuffer('Waste', used_vol, check=True)
-        #Remove hybmix code from info file
-        perif.removeHybmix(self.db_path, port)
         self.L.logger.info('    Washed port {} {} times with RunningBuffer: {}.'.format(target, cycles, self.Ports['RunningBuffer'])) 
 
     def cleanSystem(self, wash=True, hybmix_cycles=5, hybmix_wash_volume=200):
@@ -1441,6 +1361,7 @@ class FISH2():
             to wash. Default=5
         `hybmix_wash_volume`(int): Specific for washing hybmix tubes. Extra volume 
             to wash the Eppendorff tube with. Default=200
+
         """
         self.L.logger.info('Cleaning System.')
         print('Pull up all the needles so that they are not in contact with the liquids.')
@@ -1519,8 +1440,9 @@ class FISH2():
         Input:
         `temperature`(int/float): Desired temperature.
         `chamber`(str): "Chamber1"(Left) or "Chamber2"(right).
+
         """
-        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices or 'Oasis1' in self.devices or 'Oasis2' in self.devices:
+        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices:
             if chamber.lower() == 'chamber1':
                 self.TC_1.set_temp(temperature)
                 self.target_temperature[0] = temperature
@@ -1549,9 +1471,10 @@ class FISH2():
             is used.
         `step`(int/float): The step in degree Celsius. Absolute number.
         `step_time`(int/float): Sleep time in seconds untill the next step.
+
         """
         step = abs(step)
-        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices or 'Oasis1' in self.devices or 'Oasis2' in self.devices:
+        if 'ThermoCube1' in self.devices or 'ThermoCube2' in self.devices:
             if chamber.lower() == 'chamber1':
                 cur_temp = self.temp.get_temp()[2]
                 for t in np.arange(cur_temp, temperature, step if cur_temp<temperature else -step):
@@ -1583,7 +1506,7 @@ class FISH2():
         self.L.logger.info('    {} ramped to {} degree Celsius with {}C per step of {}seconds.'.format(chamber, temperature, step, step_time))
 
 
-    def waitTemp(self, target_temp, chamber, error=1, array_size=5, sd=0.02, verbose = False):
+    def waitTemp(self, target_temp, chamber, error=1, array_size=5, sd=0.005, verbose = False):
         """
         Wait until chamber has reached target temperature.
         Input:
@@ -1593,9 +1516,10 @@ class FISH2():
         `array_size`(int): Size of array to check if stable temperature plateau is
             reached. Default = 5
         `sd`(float): Standard deviation, if sd of temperature array drops below 
-            threshold value, function returns. Default = 0.02
+            threshold value, function returns. Default = 0.005
         `verbose`(bool): If True it prints the temperature values every second
             while waiting for set temperature.
+
         """
         bufferT = deque(maxlen=array_size)
         counter = 0
@@ -1644,10 +1568,10 @@ class FISH2():
             #Notify the user if the temperature could not be reached.
             if counter >= 600 and (counter%300) == 0: #send 5 messages after 10min, every 5min.
                 #Check if the Temperature Control Unit reports an error.
-                if chamber.lower() == 'chamber1' and  ('ThermoCube1' in self.devices or 'Oasis1' in self.devices):
+                if chamber.lower() == 'chamber1' and  'ThermoCube1' in self.devices:
                     error_response = self.TC_1.check_error(verbose = True, raise_error = False)
                     tc = 'TC_1'
-                elif chamber.lower() == 'chamber2' and   ('ThermoCube2' in self.devices or 'Oasis2' in self.devices):
+                elif chamber.lower() == 'chamber2' and  'ThermoCube2' in self.devices:
                     error_response = self.TC_2.check_error(verbose = True, raise_error = False)
                     tc = 'TC_2'
                 elif 'TC720' in self.devices:
@@ -1665,7 +1589,7 @@ class FISH2():
                 for i in range(5):
                     timeout_message = 'Target temperature of {}C could not be reached in 10 min, check system. Current temperature: {}C on {}, Errors on {}: {}'.format(target_temp, cur_temp, chamber, tc, error_message)
                     self.L.logger.info('    ' + timeout_message)
-                    self.push(short_message='Temperature warning',
+                    pself.push(short_message='Temperature warning',
                                long_message= timeout_message)
 
             counter +=1        
@@ -1746,7 +1670,7 @@ class FISH2():
 
     def check_error_TC1(self, verbose=False):
         'Check errors on ThermoCube1.'
-        if self.Machines['ThermoCube1'] == 1 or self.Machines['Oasis1'] == 1:
+        if self.Machines['ThermoCube1'] == 1:
             try:
                 TC_1_error = self.TC_1.check_error(verbose=False, raise_error=False)
             except Exception as e:
@@ -1759,13 +1683,13 @@ class FISH2():
 
     def check_error_TC2(self, verbose=False):
         'Check errors on ThermoCube2.'
-        if self.Machines['ThermoCube2'] == 1 or self.Machines['Oasis2'] == 1:
+        if self.Machines['ThermoCube2'] == 1:
             try:
                 TC_2_error = self.TC_2.check_error(verbose=False, raise_error=False)
             except Exception as e:
                 TC_2_error = [False, 'TC_2 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
             if verbose:
-                print('    TC2: {}'.format(TC_2_error))
+                print('    TC2: {}'.format(TC_1_error))
             return TC_2_error
         else:
             return None
@@ -1789,7 +1713,7 @@ class FISH2():
                     if C1_temp > (self.target_temperature[0] + temperature_range) or C1_temp < (self.target_temperature[0] - temperature_range):
                         C1_temprature_error = [False, 'Chamber1 is {}C, and should be at {}C'.format(C1_temp, self.target_temperature[0])]
                         if verbose:
-                            print('    C1: {}'.format(C1_temprature_error))
+                            print('    C1: {}'.format(C1_temperature_error))
 
                 #Check if chamber 2 is far off from the target temperature
                 C2_temprature_error = None
@@ -1797,19 +1721,16 @@ class FISH2():
                     if C2_temp > (self.target_temperature[1] + temperature_range) or C2_temp < (self.target_temperature[1] - temperature_range):
                         C2_temprature_error = [False, 'Chamber2 is {}C, and should be at {}C'.format(C2_temp, self.target_temperature[1])]
                         if verbose:
-                            print('    C2: {}'.format(C2_temprature_error))
+                            print('    C2: {}'.format(TC2_temperature_error))
                         
             except Exception as e:
                 temperature_error = [False, 'Could not read temperature from Yocto Thermistor, check connection. Error: {}'.format(e)]
-                C1_temperature_error = None
-                C2_temprature_error = None
-                room_temp, C1_temp, C2_temp = None, None, None
             if verbose:
                 print('    Temperature: {}'.format(temperature_error))
             
             return roomtemp_yocto_error, C1_temperature_error, C2_temprature_error, [room_temp, C1_temp, C2_temp]
         else:
-            return None, None, None, [None, None, None]
+            return None, None, None, None
 
     def check_error_TC720(self, alarm_room_temperature=35, temperature_range=5, verbose=False):
         'Check errors on TC720'
@@ -1837,26 +1758,13 @@ class FISH2():
 
             except Exception as e:
                 TC720_error = [False, 'TC720 POSSIBLY NOT CONNECTED, did you switch it off? If yes, remove it from the active machines in the datafile. Error: {}'.format(e)]
-                TC720_temperature_error = None
-                roomtemp_TC720_error = None
-                room_temp, C1_temp, C2_temp = None, None, None
+                TC720_temperature_error, roomtemp_TC720_error, room_temp, C1_temp, C2_temp = None, None, None, None, None
             if verbose:
                 print('    TC720: {}'.format(TC720_error))
 
             return TC720_error, TC720_temperature_error, roomtemp_TC720_error, [room_temp, C1_temp, C2_temp]
         else:
-            return None, None, None, [None, None, None]
-
-    def check_error_disk(self):
-        """
-        Check disk usage to warn user if it is too high.
-        """
-        drive = self.imaging_output_folder[:2] #Only on windows??
-        total, used, free = shutil.disk_usage(drive)
-        if (used / total) > self.Alert_volume['Disk']:
-            return [False, f'Disk usage high: {used // (2**30)}GB used, {free // (2**30)}GB free, of total {total // (2**30)}GB']
-        else:
-            return [True, f'Disk usage: {used // (2**30)}GB used, {free // (2**30)}GB free, of total {total // (2**30)}GB']
+            return None, None, None, None
 
     def check_error(self, alarm_room_temperature=35, temperature_range=5, number_of_messages=10):
         """
@@ -1869,6 +1777,7 @@ class FISH2():
         `number_of_messages`(int): Number of messages that are sent every period 
             that an error is detected. Default to 10. This is a lot but it will 
             hopefully wake up the user.
+
         """
         #Update parameters
         self.updateExperimentalParameters(self.db_path, ignore_flags=True)
@@ -1878,19 +1787,21 @@ class FISH2():
         TC_2_error = self.check_error_TC2()
         roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, t1 = self.check_error_yoctopuce(alarm_room_temperature, temperature_range)
         TC720_error, TC720_temperature_error, roomtemp_TC720_error, t2 = self.check_error_TC720(alarm_room_temperature, temperature_range)
-        disk_error = self.check_error_disk()
 
         #Get the temperature readings of the connected machines
-        if t1 == [None, None, None]:
+        #Add for RT option.
+        if t1 == None and t2 == None:
+            room_temp, C1_temp, C2_temp = None, None, None
+        
+        elif t1 == None:
             room_temp, C1_temp, C2_temp = t2
-        elif t2 == [None, None, None]:
+        elif t2 == None:
             room_temp, C1_temp, C2_temp = t1
 
         #Gather issues
         errors = []
         ##### Add new error codes here if you add machines:
-        for report in [TC_1_error, TC_2_error, roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, 
-                       TC720_error, TC720_temperature_error, roomtemp_TC720_error, disk_error]:
+        for report in [TC_1_error, TC_2_error, roomtemp_yoct_error, C1_temprature_error, C2_temprature_error, TC720_error, TC720_temperature_error, roomtemp_TC720_error]:
             if report != None:
                 if report[0] == False:
                     errors.append(report)
@@ -1899,15 +1810,9 @@ class FISH2():
         #Warn user by sending a number of messages
         if errors != []:
             self.found_error = True
-            
-            #If only the disk has an error do not send a million messages
-            if len(errors) == 1 and errors[0][1].startswith('Disk usage high'):
+            for i in range(number_of_messages):
                 self.push(short_message = 'ERROR on {}'.format(self.Parameters['Machine']),
                             long_message = '\n\nWarning: '.join(er[1] for er in errors if er[0]==False))
-            else:
-                for i in range(number_of_messages):
-                    self.push(short_message = 'ERROR on {}'.format(self.Parameters['Machine']),
-                                long_message = '\n\nWarning: '.join(er[1] for er in errors if er[0]==False))
         else:
             if self.found_error == True:
                 self.L.logger.info('Issue resolved, no errors detected anymore.')
@@ -1946,7 +1851,7 @@ class FISH2():
         are False and an error needs to be reported to the user.
         
         """ 
-        current_temp = ''
+        current_temp = '-'
         
         #Loop through the wait time.
         while sec > 0:
@@ -1986,8 +1891,7 @@ class FISH2():
 #=============================================================================
 
     def scheduler(self, function1, function2, remove_experiment=True, log_info_file=True,
-                  current_1=None, current_2=None, start_with=None, single_experiment=True,
-                 wash_hybmix_tubes=True, wash_cycles=5, wash_volume=200):
+                  current_1=None, current_2=None, start_with=None ):
         """
         Scheduler that schedules and performs the experiments on the ROBOFISH
         system depending on the info provided in the info file. The experiment
@@ -1998,6 +1902,7 @@ class FISH2():
         experiments. Keyboard interupt to stop it. To run individual experiments
         set remove_experiment to False and the scheduler will go into save_sleep
         when the experiment is done. 
+
         Input:
         `function1`(function): Function for the FIRST part of the experiment.
             Usually the first round of the experiment is different because no
@@ -2019,6 +1924,7 @@ class FISH2():
             Practical when experiments are standardized and only one
             experiment is run at a time.
         `log_info_file`(bool): If true it logs all info in the info file. 
+
         Restart functionalities:
         Use these parameters when you had to restart the scheduler.
         `current_1`(int): Current cycle of Chamber1. Use this if you want to
@@ -2031,18 +1937,6 @@ class FISH2():
             So if you want to do round 10, pass 9 to current_2.
         `start_with`(int): Number of chamber to start with first. So 1 for
             Chamber1 and 2 for Chamber2.
-        Scheduling options:
-        `single_experiment` (bool): If True, the scheduler will perform a single
-            experiment in a single hybridization chamber. If False, the
-            scheduler will stay on and wait for the next experiment to be filled
-            in by the user in the info file. If you run two flow cells this 
-            needs to be set to False.
-        Cleaning options:
-        `wash_hybmix_tubes`(bool): Wash the hybmix tubes. Warning: If the hybmix 
-            tubes are washed in this function they should not also be wased in 
-            the extractDispenseHybmix() function! Default True.
-        `wash_cycles` (int): Number of times to wash the hybmix tubes.
-        `wash_volume` (int): Extra volume to wash the Eppendorff tube with.
 
         """
 
@@ -2087,13 +1981,11 @@ class FISH2():
             #Get the parameters of this experiment
             info_dict = {
                 'round_code' : round_code,
-                'experiment_name': cur_exp['EXP_name_{}'.format(cur_stain)],
-                'Description': self.Parameters['Description_{}'.format(cur_stain)],
-                'Protocols_io': self.Parameters['Protocols_io_{}'.format(cur_stain)],
+                'experiment_name': cur_exp['EXP_number_{}'.format(cur_stain)],
                 'chamber': 'chamber{}'.format(cur_stain),
-                'Machine': self.Parameters['Machine'],
-                'Operator': self.Parameters['Operator'],
-                'Timestamp_robofish': time.strftime("%Y-%m-%d %H-%M-%S"),
+                'machine': self.Parameters['Machine'],
+                'operator': self.Parameters['Operator'],
+                'timestamp_robofish': time.strftime("%Y-%m-%d %H-%M-%S"),
                 'hybridization_fname': 'Unknown-at-dict-generation-time',
                 'hybridization_number': int(cur_exp['Current_cycle_{}'.format(cur_stain)]),
                 'Hyb_time_A': self.Parameters['Hyb_time_{}_A'.format(cur_stain)],
@@ -2111,37 +2003,12 @@ class FISH2():
                 'Strain': self.Parameters['Strain_{}'.format(cur_stain)],
                 'Age': self.Parameters['Age_{}'.format(cur_stain)],
                 'Tissue': self.Parameters['Tissue_{}'.format(cur_stain)],
-                'Orientation': self.Parameters['Orientation_{}'.format(cur_stain)],
                 'RegionImaged': self.Parameters['RegionImaged_{}'.format(cur_stain)],
                 'SectionID': self.Parameters['SectionID_{}'.format(cur_stain)],
-                'Position': self.Parameters['Position_{}'.format(cur_stain)],
-                'Experiment_type': self.Parameters['Experiment_type_{}'.format(cur_stain)],
-                'Chemistry': self.Parameters['Chemistry_{}'.format(cur_stain)],
-                'Probes_FASTA': {'DAPI': self.Parameters['Probes_FASTA_DAPI_{}'.format(cur_stain)],
-                                'Atto425': self.Parameters['Probes_FASTA_Atto425_{}'.format(cur_stain)],
-                                'FITC': self.Parameters['Probes_FASTA_FITC_{}'.format(cur_stain)],
-                                'Cy3': self.Parameters['Probes_FASTA_Cy3_{}'.format(cur_stain)],
-                                'TxRed': self.Parameters['Probes_FASTA_TxRed_{}'.format(cur_stain)],
-                                'Cy5': self.Parameters['Probes_FASTA_Cy5_{}'.format(cur_stain)],
-                                'Cy7': self.Parameters['Probes_FASTA_Cy7_{}'.format(cur_stain)],
-                                'Europium': self.Parameters['Probes_FASTA_Europium_{}'.format(cur_stain)]},
-                'Barcode': self.Parameters['Barcode_{}'.format(cur_stain)],
-                'Barcode_length': self.Parameters['Barcode_length_{}'.format(cur_stain)],
-                'Codebooks' : {'DAPI': self.Parameters['Codebook_DAPI_{}'.format(cur_stain)],
-                               'Atto425': self.Parameters['Codebook_Atto425_{}'.format(cur_stain)],
-                               'FITC': self.Parameters['Codebook_FITC_{}'.format(cur_stain)],
-                               'Cy3': self.Parameters['Codebook_Cy3_{}'.format(cur_stain)],
-                               'TxRed': self.Parameters['Codebook_TxRed_{}'.format(cur_stain)],
-                               'Cy5': self.Parameters['Codebook_Cy5_{}'.format(cur_stain)],
-                               'Cy7': self.Parameters['Codebook_Cy7_{}'.format(cur_stain)],
-                               'Europium': self.Parameters['Codebook_Europium_{}'.format(cur_stain)]},
-                'Multicolor_barcode': self.Parameters['Multicolor_barcode_{}'.format(cur_stain)],
-                'Stitching_type': self.Parameters['Stitching_type_{}'.format(cur_stain)],
                 'StitchingChannel': self.Parameters['StitchingChannel_{}'.format(cur_stain)],
                 'Overlapping_percentage': self.Parameters['Overlapping_percentage_{}'.format(cur_stain)],
                 'channels': target_dict,
                 'roi': self.Parameters['roi_{}'.format(cur_stain)],
-                'Pipeline': self.Parameters['Pipeline_{}'.format(cur_stain)],
                 'system_log': self.L.logger_path
                 }
             if self.Machines['YoctoThermistor'] == 1:
@@ -2150,7 +2017,7 @@ class FISH2():
             if log == True:
                 self.L.logger.info('\nCycle parameters:\n'+''.join(['{}: {}\n'.format(i, info_dict[i]) for i in info_dict]))
 
-            info_file_name = 'TEMPORARY_{}_{}'.format( cur_exp['EXP_name_{}'.format(cur_stain)], round_code)
+            info_file_name = 'TEMPORARY_{}_{}'.format( cur_exp['EXP_number_{}'.format(cur_stain)], round_code)
             pickle.dump(info_dict, open('{}\\{}.pkl'.format(self.imaging_output_folder, info_file_name), 'wb'))
 
         def updateCurExp():
@@ -2163,53 +2030,15 @@ class FISH2():
             for k in cur_exp:
                 if k in self.Parameters:
                     cur_exp[k] = self.Parameters[k]
-
-        
-        def create_config_file(cur_stain, other):
-            """
-            Make experiment configuration file.
-            Input:
-            `cur_stain`(int): Number of the chamber currently staining.
-            `other`(int): Number of the other chamber
-            """
-            fname = '{}\\{}_config.yaml'.format(self.imaging_output_folder, cur_exp['EXP_name_{}'.format(cur_stain)])
-            #params = perif.getFISHSystemMetadata('FISH_System_datafile.yaml', table='Parameters')
-            #Select only current experiment.
-            params = {}
-            codebooks = {}
-            probe_sets = {}
-            for k,i in self.Parameters.items():
-                if k.endswith('_{}'.format(cur_stain)):
-
-                    if k.startswith('Codebook_'):
-                        k_short = k[:-2]
-                        codebooks[k_short] = i
-                    elif k.startswith('Probes_FASTA_'):
-                        k_short = k[:-2]
-                        probe_sets[k_short] = i
-                    else:
-                        k_short = k[:-2]
-                        params[k_short] = i
-
-                #Parameters without camber specific ending
-                if not k.endswith('_{}'.format(other)) and not k.endswith('_{}'.format(cur_stain)):
-                    params[k] = i
-
-            params['Codebooks'] = codebooks
-            params['Probes_FASTA'] = probe_sets
-
-            #Dump params in new .yaml file.
-            perif.yamlMake(fname, params)
-            self.L.logger.info('Experiment configuration file created: {}'.format(fname))
-
+    
         #######################################################
         # Scheduler
         #######################################################
 
         #Information on the current state of the experiment
         cur_exp = {
-            'EXP_name_1': 'None',
-            'EXP_name_2': 'None',
+            'EXP_number_1': 'None',
+            'EXP_number_2': 'None',
             'Location_EXP_1': 'None',
             'Location_EXP_2': 'None',
             'Target_cycles_1': 'None',
@@ -2226,11 +2055,11 @@ class FISH2():
             'tic_2': None}
 
         #check exp number to see if there are one or two experiments to run.
-        if cur_exp['EXP_name_1'] != 'None' and cur_exp['EXP_name_2'] != 'None':
+        if cur_exp['EXP_number_1'] != 'None' and cur_exp['EXP_number_2'] != 'None':
             cur_exp['Current_staining'] = 1
-        elif cur_exp['EXP_name_1'] != 'None':
+        elif cur_exp['EXP_number_1'] != 'None':
             cur_exp['Current_staining'] = 1
-        elif cur_exp['EXP_name_2'] != 'None':
+        elif cur_exp['EXP_number_2'] != 'None':
             cur_exp['Current_staining'] = 2
         self.L.logger.info('Start new experiment, start with chamber {}.'.format(cur_exp['Current_staining']))    
 
@@ -2258,7 +2087,7 @@ class FISH2():
 
         #Pause or exit if there are no experiments to perform
             updateCurExp()
-            if cur_exp['EXP_name_1'] == 'None' and cur_exp['EXP_name_2'] == 'None':
+            if cur_exp['EXP_number_1'] == 'None' and cur_exp['EXP_number_2'] == 'None':
                 print('No experiments detected to perform.')
                 print('You can resume after preparing a new experiment or stop the program.')
                 while True:
@@ -2272,11 +2101,11 @@ class FISH2():
                     input('\nPress Enter when ready to resume staining and imaging...')
                     updateCurExp()
                     #check exp number to see if there are one or two experiments to run.
-                    if cur_exp['EXP_name_1'] != 'None' and cur_exp['EXP_name_2'] != 'None':
+                    if cur_exp['EXP_number_1'] != 'None' and cur_exp['EXP_number_2'] != 'None':
                         cur_exp['Current_staining'] = 1
-                    elif cur_exp['EXP_name_1'] != 'None':
+                    elif cur_exp['EXP_number_1'] != 'None':
                         cur_exp['Current_staining'] = 1
-                    elif cur_exp['EXP_name_2'] != 'None':
+                    elif cur_exp['EXP_number_2'] != 'None':
                         cur_exp['Current_staining'] = 2
                     self.L.logger.info('Start new experiment, start with chamber {}.'.format(cur_exp['Current_staining']))    
 
@@ -2290,12 +2119,12 @@ class FISH2():
         #Does Current_stain exist:
             updateCurExp()
             #No, Current_stain does not exist, Only Other is being stained and imaged:
-            if cur_exp['EXP_name_{}'.format(cur_stain)] == 'None':
+            if cur_exp['EXP_number_{}'.format(cur_stain)] == 'None':
                 self.L.logger.info('No new experiment detected in Chamber{}, waiting untill imaging of Chamber{} is finished'.format(cur_stain, other))
                 print('')
                 #Wait untill Other is finished with imaging
                 self.waitImaging(self.start_imaging_file_path)
-                self.L.logger.info('Imaging Experiment: {} Cycle: {} done.\n'.format(cur_exp['EXP_name_{}'.format(other)], cur_exp['Current_cycle_{}'.format(other)]))
+                self.L.logger.info('Imaging Experiment: {} Cycle: {} done.\n'.format(cur_exp['EXP_number_{}'.format(other)], cur_exp['Current_cycle_{}'.format(other)]))
                 print('')
                 #FLIP
                 cur_exp['Current_staining'] = other
@@ -2310,10 +2139,7 @@ class FISH2():
                     cur_exp['Current_cycle_{}'.format(cur_stain)] = 1
                     #Logging
                     self.L.logger.info('_____')
-                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
-                    #Make config file
-                    create_config_file(cur_stain, other)
-                    #Record start time
+                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     timing['tic_{}'.format(cur_stain)] = datetime.now()
                     print('')
                     #################################################################
@@ -2328,7 +2154,7 @@ class FISH2():
                     #Logging
                     self.L.logger.info(' ')
                     self.L.logger.info('_____')
-                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                    self.L.logger.info('STARTING {}, CYCLE: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     #Calculate total experiment time
                     if timing['tic_{}'.format(cur_stain)] != None:
                         round_time = datetime.now() - timing['tic_{}'.format(cur_stain)]
@@ -2342,8 +2168,6 @@ class FISH2():
                     #################################################################
                     #Perform Repeat Part of experiment
                     function2('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)])
-                    #Update
-                    self.updateExperimentalParameters(self.db_path, ignore_flags=False)
                     #Write info file for this round
                     create_info_dict(cur_exp, cur_stain, log=log_info_file)
         
@@ -2352,43 +2176,28 @@ class FISH2():
                 updateCurExp()
                 if cur_exp['Current_cycle_{}'.format(cur_stain)] >= cur_exp['Target_cycles_{}'.format(cur_stain)]:
                     #Start the last imaging
-                    self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                    self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                     self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
-                    #Wash the hybmix tubes during the imaging before wrapping up the experiment.
-                    if wash_hybmix_tubes == True:
-                        #Get Hybmix port.
-                        Hybmix_code = self.getHybmixCode('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)], indirect=None)
-                        Hybmix_port = self.getHybmixPort(Hybmix_code)
-                        #Clean thybmix tube.
-                        self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles, wash_volume=wash_volume)
-                    #If single experiment, wait for last imaging cycle.
-                    if single_experiment == True:
-                        #Wait for last imaging cycle to finish.
-                        self.waitImaging(self.start_imaging_file_path)
-                        #Create file that experiment is completed.
-                        finish_file = open(f'{self.imaging_output_folder}/experimentdone.txt', 'w')
-                        finish_file.close()
-
                     #Logging
-                    self.L.logger.info('FINISHED {}, Removing from database and FISH_System_datafile.yalm'.format(cur_exp['EXP_name_{}'.format(cur_stain)]))
+                    self.L.logger.info('FINISHED {}, Removing from database and FISH_System_datafile.yalm'.format(cur_exp['EXP_number_{}'.format(cur_stain)]))
                     #Log the targets
                     self.L.logger.info('Targets:\n'+''.join('{}\n'.format(i) for i in self.Targets))
                     wrappup = True
                     if remove_experiment == True:    
                         #Notify user
-                        short_message = '{} Finished'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
+                        short_message = '{} Finished'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
                         long_message = '''Full experiment completed. 
                         All experimental info will be removed from database and FISH_Sytem_datafile.yaml\n
                         You can now add a new EXP_{} to the FISH_Sytem_datafile.yaml, via the user program.'''.format(cur_stain)
                         self.push(short_message, long_message)
                         print(short_message + '\n' + long_message + '\n')
                         #Remove experiment from database and FISH_System_datafile
-                        perif.removeExperiment(self.db_path, cur_exp['EXP_name_{}'.format(cur_stain)])
+                        perif.removeExperiment(self.db_path, cur_exp['EXP_number_{}'.format(cur_stain)])
                         cur_exp['Current_cycle_{}'.format(cur_stain)] = 0
                         cur_exp['Current_part_{}'.format(cur_stain)] = 'None' 
                     else:
                         #Notify user
-                        short_message = '{} Finished'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
+                        short_message = '{} Finished'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
                         long_message = '''Full experiment completed. 
                         Ready to start a new experiment. Starting secure sleep'''.format(cur_stain)
                         self.push(short_message, long_message)
@@ -2402,13 +2211,13 @@ class FISH2():
                 #Check new experiment flag, For new experiment Other
                 #Give user oportunity to prepare imaging Other.
                 if perif.returnDictDB(self.db_path, 'Flags')[0]['New_EXP_flag_{}'.format(other)] == 1:
-                    short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_name_{}'.format(other)])
+                    short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_number_{}'.format(other)])
                     long_message = '''Reply with "Pause" if you want to prepare the imaging now (set ROI, focusing etc.).\n
                     There will be another oportunity after the imaging of {}\n
-                    Reply: "Pause", reply time 10min'''.format(cur_exp['EXP_name_{}'.format(cur_stain)])
+                    Reply: "Pause", reply time 10min'''.format(cur_exp['EXP_number_{}'.format(cur_stain)])
                     self.push(short_message, long_message)
                     print(short_message + '\n' + long_message + '\n')
-                    print('\nYou can now prepare the imaging of {}'.format(cur_exp['EXP_name_{}'.format(other)]))
+                    print('\nYou can now prepare the imaging of {}'.format(cur_exp['EXP_number_{}'.format(other)]))
 
                     #10 minutes reply time
                     time.sleep(60 * 10) 
@@ -2417,13 +2226,13 @@ class FISH2():
                         short_message = 'Experiment paused'
                         long_message = 'Pause untill user input. Prepare imaging now (set ROI, focusing etc.).'
                         self.push(short_message, long_message)
-                        print('\nExperiment paused before imaging {} so that user can prepare the imaging of {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['EXP_name_{}'.format(other)]))
+                        print('\nExperiment paused before imaging {} so that user can prepare the imaging of {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['EXP_number_{}'.format(other)]))
                         input('Press Enter to continue when ready...')
                         perif.removeFlagDB(self.db_path, 'New_EXP_flag_{}'.format(other))
                         updateCurExp()
                     else:
                         short_messgage = 'Continuing'
-                        long_message = 'Experiment not paused, continuing with imaging of {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
+                        long_message = 'Experiment not paused, continuing with imaging of {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
                         self.push(short_message, long_message)
                         print(short_message + '\n' + long_message + '\n')
                         updateCurExp()
@@ -2431,9 +2240,9 @@ class FISH2():
                 #Before imaging Current_stain check if imaging has been set for Current_stain
                 if perif.returnDictDB(self.db_path, 'Flags')[0]['New_EXP_flag_{}'.format(cur_stain)] == 1:
                     while True:
-                        short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)])
+                        short_messgage = 'Prepare imaging of {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)])
                         long_message = '''Prepare imaging of {} (set ROI, focusing etc.).\n
-                        If you already did this reply with: "Continue". Relpy time 10min.'''.format(cur_exp['EXP_name_{}'.format(cur_stain)])
+                        If you already did this reply with: "Continue". Relpy time 10min.'''.format(cur_exp['EXP_number_{}'.format(cur_stain)])
                         self.push(short_message, long_message)
                         print(short_message + '\n' + long_message + '\n')
                         print('If you can not sent push messages: Remove "New_EXP_flag_{}" from the user program'.format(cur_stain))
@@ -2445,18 +2254,10 @@ class FISH2():
                             break
              
                 #Start imaging of Current_Stain, will wait untill the imaging of the other chamber has finished.
-                self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_name_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
+                self.L.logger.info('Start Imaging of Experiment: {} Cycle: {}'.format(cur_exp['EXP_number_{}'.format(cur_stain)], cur_exp['Current_cycle_{}'.format(cur_stain)]))
                 self.startImaging('Chamber{}'.format(cur_stain), self.start_imaging_file_path)
-               
-                #Wash the hybmix tubes during the imaging but before continuing with the other experiment.
-                if wash_hybmix_tubes == True:
-                    #Get Hybmix port.
-                    Hybmix_code = self.getHybmixCode('Chamber{}'.format(cur_stain), cur_exp['Current_cycle_{}'.format(cur_stain)], indirect=None)
-                    Hybmix_port = self.getHybmixPort(Hybmix_code)
-                    #Clean thybmix tube.
-                    self.cleanHybmixTube(Hybmix_port, cycles=wash_cycles, wash_volume=wash_volume)
 
                 #FLIP the conditions of the 2 chambers
                 cur_exp['Current_staining'] = other
                 cur_stain = cur_exp['Current_staining']
-                other = -cur_stain + 3  #Reverse 1-->2  >
+                other = -cur_stain + 3  #Reverse 1-->2   2-->1
