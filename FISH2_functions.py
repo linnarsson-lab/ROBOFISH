@@ -1881,8 +1881,13 @@ class FISH2():
         disk_error = self.check_error_disk()
 
         #Get the temperature readings of the connected machines
-        if t1 == [None, None, None]:
+            #No temperature controller connected
+        if t1 == [None, None, None] and t2 == [None, None, None]:
+            room_temp, C1_temp, C2_temp = None, None, None
+            #TC720 present
+        elif t1 == [None, None, None]:
             room_temp, C1_temp, C2_temp = t2
+            #yoctopuce present
         elif t2 == [None, None, None]:
             room_temp, C1_temp, C2_temp = t1
 
